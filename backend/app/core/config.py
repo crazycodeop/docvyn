@@ -94,10 +94,18 @@ class Settings(BaseSettings):
         return self.DATABASE_URL
 
     def get_celery_broker_url(self) -> str:
-        return self.CELERY_BROKER_URL or self.REDIS_URL
+        url = self.CELERY_BROKER_URL or self.REDIS_URL
+        if url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+            sep = "&" if "?" in url else "?"
+            return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
+        return url
 
     def get_celery_backend_url(self) -> str:
-        return self.CELERY_RESULT_BACKEND or self.REDIS_URL
+        url = self.CELERY_RESULT_BACKEND or self.REDIS_URL
+        if url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+            sep = "&" if "?" in url else "?"
+            return f"{url}{sep}ssl_cert_reqs=CERT_NONE"
+        return url
 
 
 settings = Settings()

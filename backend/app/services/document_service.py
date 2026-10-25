@@ -32,8 +32,12 @@ class DocumentService:
         count_query = select(func.count(Document.id)).where(Document.user_id == user_id)
 
         if status_filter:
-            query = query.where(Document.status == status_filter)
-            count_query = count_query.where(Document.status == status_filter)
+            if status_filter == "processing":
+                query = query.where(Document.status.in_(["processing", "queued", "uploaded"]))
+                count_query = count_query.where(Document.status.in_(["processing", "queued", "uploaded"]))
+            else:
+                query = query.where(Document.status == status_filter)
+                count_query = count_query.where(Document.status == status_filter)
 
         if search_query:
             term = f"%{search_query.strip().lower()}%"
