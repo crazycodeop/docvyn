@@ -132,16 +132,27 @@ class DocumentService:
         return doc
 
     def dispatch_processing_task(self, document_id: str):
-        """Dispatches Celery ingestion task with graceful handling if broker is offline."""
+        """Dispatches ingestion task with minimal memory footprint."""
         try:
             from app.workers.tasks import process_document_task
-            if settings.CELERY_TASK_ALWAYS_EAGER or settings.ENVIRONMENT == "test":
-                process_document_task.apply(args=[document_id])
+            import threading
+            import os
+
+            # Run in background daemon thread inside the same process to eliminate the 2nd Python/ONNX process
+            # and guarantee container memory remains well below the 512MB Render limit.
+            if settings.CELERY_TASK_ALWAYS_EAGER or os.getenv("RUN_WORKER_IN_PROCESS", "true").lower() == "true":
+                thread = threading.Thread(
+                    target=process_document_task.apply,
+                    kwargs={"args": [document_id]},
+                    daemon=True,
+                )
+                thread.start()
+                logger.info(f"Dispatched in-process background worker thread for document {document_id}")
             else:
                 process_document_task.apply_async(args=[document_id], retry=False)
-            logger.info(f"Dispatched Celery task for document {document_id}")
+                logger.info(f"Dispatched Celery task for document {document_id}")
         except Exception as e:
-            logger.warning(f"Could not dispatch Celery task: {e}. Document status remains queued.")
+            logger.warning(f"Could not dispatch processing task: {e}. Document status remains queued.")
 
     async def retry_processing(self, db: AsyncSession, document_id: str, user_id: str) -> Document:
         """Safely retries processing for a failed document."""

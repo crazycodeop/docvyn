@@ -43,14 +43,15 @@ class EmbeddingService:
                         self._local_model = TextEmbedding(
                             model_name=self.model_name,
                             cache_dir=cache_dir,
+                            threads=1,
                             local_files_only=True,
                         )
                         logger.info(f"Loaded local FastEmbed model offline from: {cache_dir}")
                     except Exception as offline_err:
                         logger.warning(f"Offline FastEmbed load failed ({offline_err}), attempting online check...")
-                        self._local_model = TextEmbedding(model_name=self.model_name, cache_dir=cache_dir)
+                        self._local_model = TextEmbedding(model_name=self.model_name, cache_dir=cache_dir, threads=1)
                 else:
-                    self._local_model = TextEmbedding(model_name=self.model_name)
+                    self._local_model = TextEmbedding(model_name=self.model_name, threads=1)
                     logger.info(f"Initialized local FastEmbed model: {self.model_name}")
             except Exception as e:
                 logger.warning(f"FastEmbed initialization error: {e}. Falling back to deterministic embeddings.")
@@ -102,8 +103,11 @@ class EmbeddingService:
             local_model = self._get_local_model()
             if local_model:
                 try:
-                    embeddings_gen = local_model.embed(texts)
-                    return [emb.tolist() for emb in embeddings_gen]
+                    embeddings_gen = local_model.embed(texts, batch_size=8, parallel=None)
+                    res = [emb.tolist() for emb in embeddings_gen]
+                    import gc
+                    gc.collect()
+                    return res
                 except Exception as e:
                     logger.error(f"Local FastEmbed embedding error: {e}")
 

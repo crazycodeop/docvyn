@@ -75,6 +75,7 @@ def process_document_task(self, document_id: str):
             if ocr_confidences
             else 1.0
         )
+        logger.info(f"[{document_id}] Extracted {len(pages)} pages (method: {dominant_method}, ocr_confidence: {avg_ocr_conf}).")
 
         # If OCR was performed, update stage to reflect it
         current_meta = dict(doc.metadata_json or {})
@@ -99,6 +100,8 @@ def process_document_task(self, document_id: str):
         if not chunks_data:
             raise EmptyDocumentError("No text chunks could be generated from document.")
 
+        logger.info(f"[{document_id}] Chunked into {len(chunks_data)} chunks.")
+
         # 6. Stage: Embedding
         current_meta = dict(doc.metadata_json or {})
         current_meta.update({"progress": 85, "stage": "embedding"})
@@ -107,7 +110,9 @@ def process_document_task(self, document_id: str):
 
         embedding_svc = EmbeddingService()
         texts = [c.content for c in chunks_data]
+        logger.info(f"[{document_id}] Starting embedding generation for {len(texts)} chunks...")
         embeddings = embedding_svc.get_embeddings_batch(texts)
+        logger.info(f"[{document_id}] Embedding generation complete ({len(embeddings)} vectors).")
 
         # 7. Store chunks and update status atomically
         # Clean up any partial chunks from prior failed attempts (idempotent)
@@ -142,6 +147,8 @@ def process_document_task(self, document_id: str):
         })
         doc.metadata_json = current_meta
         db.commit()
+
+        logger.info(f"[{document_id}] Successfully persisted {len(chunk_records)} chunks. Document processing completed!")
 
         logger.info(
             f"Successfully processed document {document_id}: {doc.page_count} pages, {doc.chunk_count} chunks (method: {dominant_method})."

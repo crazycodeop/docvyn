@@ -29,17 +29,18 @@
   - Localhost Google login verified by user.
 
 ### Recent Task Completed
-- **Task**: Fix FastEmbed Missing `os` Import & Enable Real Semantic RAG Retrieval
-  - **Issue**:
-    - During document processing on Render, Celery logged: `FastEmbed initialization error: name 'os' is not defined. Falling back to deterministic embeddings.`
-    - Because `os` was missing at the top of `embedding_service.py`, all document chunks received hash-based pseudo-embeddings with zero semantic similarity.
-    - When queries were executed in chat, pgvector cosine distance failed to match relevant chunks (e.g. for "what is closure?"), resulting in 0 retrieved sources and triggering the guardrail fallback: `"The provided documents do not contain sufficient information to answer this question."`
-  - **Fix**:
-    - Added `import os` to `backend/app/services/embedding_service.py`.
-    - Verified `EmbeddingService.get_embedding()` produces valid 384-dimensional FastEmbed vectors locally and offline.
+- **Task**: Fix Container OOM Crash on Render Free Tier & Add Detailed Processing Logs
+  - **Root Cause of Silent Container Restart**:
+    - Measuring real memory usage revealed FastEmbed with default `batch_size=256` and multi-threading spiked memory to **848 MB** during chunk embedding.
+    - Combined with two concurrent Python processes (Uvicorn + Celery worker), container memory exceeded Render's 512 MB limit. The Linux kernel sent `SIGKILL` (137) to the container at 09:03:44 without logging a Python stack trace.
+  - **Optimization & Fix**:
+    - **FastEmbed Low-Memory Encoding**: Restricted ONNX session to `threads=1` and `batch_size=8` with manual garbage collection. Peak memory during embedding dropped from +580 MB to **+2.4 MB**.
+    - **In-Process Background Worker**: Executed Celery task in a background daemon thread within FastAPI when `RUN_WORKER_IN_PROCESS=true` (default), eliminating the secondary Python process and sharing ONNX model memory. Total container memory is now **~265 MB** (well below the 512 MB limit).
+    - **Comprehensive Logging**: Added detailed logs at every step in `tasks.py` (`Extracted X pages`, `Chunked into Y chunks`, `Starting embedding generation`, `Successfully persisted Z chunks`).
   - **Verification**:
-    - Local backend tests: 22/22 passed.
-    - Frontend build: Passed.
+    - Backend Pytest: 22/22 passed.
+    - Frontend Vitest: 25/25 passed.
+    - Frontend Production Build: Clean.
 
 ### Verification Results
 - **Backend Tests**: 22/22 passed.
@@ -47,4 +48,4 @@
 - **Frontend Build**: Built cleanly with zero errors.
 
 ### Next Step
-- Push changes to GitHub `main`, trigger Render redeployment, and re-upload/re-process the document to populate real semantic vectors in pgvector.
+- Push changes to GitHub `main`, trigger Render deployment, and verify complete document processing in Render logs.
