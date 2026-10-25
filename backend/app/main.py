@@ -82,6 +82,26 @@ def root():
     }
 
 
+def get_current_memory_mb() -> float:
+    try:
+        with open("/proc/self/status", "r") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return round(int(line.split()[1]) / 1024, 2)
+    except Exception:
+        pass
+    import resource
+    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 2)
+
+
 @app.get("/health", tags=["Health"])
 def health():
-    return {"status": "ok", "service": "docvyn", "environment": settings.ENVIRONMENT}
+    mem_mb = get_current_memory_mb()
+    return {
+        "status": "ok",
+        "service": "docvyn",
+        "memory_used_mb": mem_mb,
+        "memory_limit_mb": 512,
+        "memory_percent": round((mem_mb / 512) * 100, 1),
+        "environment": settings.ENVIRONMENT,
+    }
