@@ -20,6 +20,10 @@ except ImportError:
 
 
 class EmbeddingService:
+    # Class-level singletons to prevent multiple ONNX runtime sessions from leaking memory
+    _shared_local_model = None
+    _shared_gemini_client = None
+
     def __init__(
         self,
         provider: Optional[str] = None,
@@ -28,19 +32,17 @@ class EmbeddingService:
         self.provider = (provider or settings.EMBEDDING_PROVIDER).lower()
         self.model_name = model_name or settings.LOCAL_EMBEDDING_MODEL
         self.dimension = settings.VECTOR_DIMENSION
-        self._local_model = None
-        self._gemini_client = None
 
     def _get_local_model(self):
         if not HAS_FASTEMBED:
             return None
-        if self._local_model is None:
+        if EmbeddingService._shared_local_model is None:
             try:
                 # Use persistent cache directory if available to prevent runtime downloads
                 cache_dir = os.getenv("FASTEMBED_CACHE_PATH", "/app/model_cache")
                 if os.path.exists(cache_dir):
                     try:
-                        self._local_model = TextEmbedding(
+                        EmbeddingService._shared_local_model = TextEmbedding(
                             model_name=self.model_name,
                             cache_dir=cache_dir,
                             threads=1,
@@ -49,25 +51,37 @@ class EmbeddingService:
                         logger.info(f"Loaded local FastEmbed model offline from: {cache_dir}")
                     except Exception as offline_err:
                         logger.warning(f"Offline FastEmbed load failed ({offline_err}), attempting online check...")
-                        self._local_model = TextEmbedding(model_name=self.model_name, cache_dir=cache_dir, threads=1)
+                        EmbeddingService._shared_local_model = TextEmbedding(
+                            model_name=self.model_name, cache_dir=cache_dir, threads=1
+                        )
                 else:
-                    self._local_model = TextEmbedding(model_name=self.model_name, threads=1)
+                    EmbeddingService._shared_local_model = TextEmbedding(
+                        model_name=self.model_name, threads=1
+                    )
                     logger.info(f"Initialized local FastEmbed model: {self.model_name}")
             except Exception as e:
                 logger.warning(f"FastEmbed initialization error: {e}. Falling back to deterministic embeddings.")
-                self._local_model = False
-        return self._local_model if self._local_model is not False else None
+                EmbeddingService._shared_local_model = False
+        return (
+            EmbeddingService._shared_local_model
+            if EmbeddingService._shared_local_model is not False
+            else None
+        )
 
     def _get_gemini_client(self):
         if not HAS_GOOGLE_GENAI or not settings.GEMINI_API_KEY:
             return None
-        if self._gemini_client is None:
+        if EmbeddingService._shared_gemini_client is None:
             try:
-                self._gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+                EmbeddingService._shared_gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
             except Exception as e:
                 logger.warning(f"Gemini client initialization error: {e}")
-                self._gemini_client = False
-        return self._gemini_client if self._gemini_client is not False else None
+                EmbeddingService._shared_gemini_client = False
+        return (
+            EmbeddingService._shared_gemini_client
+            if EmbeddingService._shared_gemini_client is not False
+            else None
+        )
 
     def _generate_fallback_embedding(self, text: str) -> List[float]:
         """Deterministic pseudo-embedding for testing or offline environments without an API key."""
@@ -106,7 +120,12 @@ class EmbeddingService:
                     embeddings_gen = local_model.embed(texts, batch_size=8, parallel=None)
                     res = [emb.tolist() for emb in embeddings_gen]
                     import gc
+                    import ctypes
                     gc.collect()
+                    try:
+                        ctypes.CDLL("libc.so.6").malloc_trim(0)
+                    except Exception:
+                        pass
                     return res
                 except Exception as e:
                     logger.error(f"Local FastEmbed embedding error: {e}")
