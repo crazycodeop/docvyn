@@ -1,0 +1,19 @@
+graph TD
+    Client["React Frontend (SPA, Vite, Tailwind CSS)"]
+    API["FastAPI Backend (/api/v1)"]
+    DB[("Supabase PostgreSQL + pgvector")]
+    Redis[("Redis Broker & Cache")]
+    Worker["Celery Background Worker"]
+    Storage["Local Filesystem / Supabase Storage"]
+    Groq["Groq Cloud API (Llama 3.3 70B Versatile)"]
+    FastEmbed["Local FastEmbed (BAAI/bge-small-en-v1.5)"]
+
+    Client -->|REST & JWT Auth| API
+    API -->|Async CRUD & Similarity Search| DB
+    API -->|Write File Stream| Storage
+    API -->|Dispatch Ingestion Task| Redis
+    Redis -->|Consume Task| Worker
+    Worker -->|Read Raw Bytes| Storage
+    Worker -->|Generate Embeddings| FastEmbed
+    Worker -->|Insert Chunks & Vectors| DB
+    API -->|RAG Grounded Query| Groq

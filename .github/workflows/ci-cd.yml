@@ -1,0 +1,94 @@
+name: docvyn CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-test:
+    name: Backend Tests (FastAPI & Pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest test suite
+        run: |
+          PYTHONPATH=. pytest tests -v
+        env:
+          ENVIRONMENT: test
+          SECRET_KEY: test-ci-secret-key-for-jwt-signing-minimum-32-chars
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          REDIS_URL: redis://localhost:6379/0
+
+  frontend-test-and-build:
+    name: Frontend Tests & Production Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Vitest unit tests
+        run: npm test -- --run
+
+      - name: Build production bundle (Vite)
+        run: npm run build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+  deploy:
+    name: Production Deployment Trigger
+    needs: [backend-test, frontend-test-and-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Backend Deploy Webhook (Optional)
+        if: ${{ env.RENDER_DEPLOY_HOOK != '' || env.RAILWAY_DEPLOY_HOOK != '' }}
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "Triggering Render backend deployment..."
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          fi
+          if [ -n "${{ secrets.RAILWAY_DEPLOY_HOOK }}" ]; then
+            echo "Triggering Railway backend deployment..."
+            curl -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
+          fi
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          RAILWAY_DEPLOY_HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
+
+      - name: Deployment Notification
+        run: echo "CI tests and build passed successfully! Main branch ready for continuous delivery."

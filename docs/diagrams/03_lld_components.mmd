@@ -1,0 +1,54 @@
+classDiagram
+    class User {
+        +String id
+        +String email
+        +String hashed_password
+        +String full_name
+        +String role
+        +Boolean is_active
+        +DateTime created_at
+    }
+
+    class Document {
+        +String id
+        +String user_id
+        +String title
+        +String filename
+        +String file_path
+        +Integer file_size
+        +String mime_type
+        +String file_hash
+        +String status
+        +Integer page_count
+        +Integer chunk_count
+    }
+
+    class DocumentChunk {
+        +String id
+        +String document_id
+        +Integer chunk_index
+        +String content
+        +Integer page_number
+        +Integer token_count
+        +Vector embedding
+    }
+
+    class Conversation {
+        +String id
+        +String user_id
+        +String title
+        +DateTime created_at
+    }
+
+    class Message {
+        +String id
+        +String conversation_id
+        +String role
+        +String content
+        +JSON citations_json
+    }
+
+    User "1" --> "*" Document : owns
+    User "1" --> "*" Conversation : starts
+    Document "1" --> "*" DocumentChunk : contains
+    Conversation "1" --> "*" Message : contains

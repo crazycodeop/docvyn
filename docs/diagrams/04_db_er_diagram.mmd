@@ -1,0 +1,67 @@
+erDiagram
+    users ||--o{ refresh_tokens : has
+    users ||--o{ documents : owns
+    users ||--o{ conversations : initiates
+    documents ||--o{ document_chunks : partitions_into
+    conversations ||--o{ messages : holds
+
+    users {
+        string id PK
+        string email UK
+        string hashed_password
+        string full_name
+        string role
+        boolean is_active
+        timestamp created_at
+    }
+
+    refresh_tokens {
+        string id PK
+        string user_id FK
+        string token UK
+        timestamp expires_at
+        boolean is_revoked
+    }
+
+    documents {
+        string id PK
+        string user_id FK
+        string title
+        string filename
+        string file_path
+        integer file_size
+        string mime_type
+        string file_hash
+        string status
+        integer page_count
+        integer chunk_count
+        json metadata_json
+    }
+
+    document_chunks {
+        string id PK
+        string document_id FK
+        integer chunk_index
+        text content
+        integer page_number
+        integer token_count
+        vector embedding
+        json metadata_json
+    }
+
+    conversations {
+        string id PK
+        string user_id FK
+        string title
+        timestamp created_at
+    }
+
+    messages {
+        string id PK
+        string conversation_id FK
+        string role
+        text content
+        json citations_json
+        integer tokens_used
+        timestamp created_at
+    }

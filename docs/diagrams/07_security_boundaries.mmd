@@ -1,0 +1,30 @@
+graph TD
+    subgraph PublicInternet [Public Internet]
+        Browser["User Browser"]
+    end
+
+    subgraph DMZ [Edge & Security Layer]
+        CORS["CORS Policy Validation"]
+        RateLimit["Rate Limiting & Size Checks"]
+        JWTIssuer["JWT Bearer Validation & Rotation"]
+    end
+
+    subgraph InternalApp [Application Boundary]
+        OwnershipGuard["Document Ownership Guard (user_id check)"]
+        Sanitizer["Prompt Injection Boundary (<DOCUMENT_CONTEXT>)"]
+        PathSanitizer["Path Traversal Guard (_resolve_safe_path)"]
+    end
+
+    subgraph StorageData [Secure Data Store]
+        PGVector["PostgreSQL Isolated Row-Level Queries"]
+        Disk["Filesystem Storage (Partitioned users/{uid}/)"]
+    end
+
+    Browser -->|HTTPS| CORS
+    CORS --> RateLimit
+    RateLimit --> JWTIssuer
+    JWTIssuer --> OwnershipGuard
+    OwnershipGuard --> Sanitizer
+    OwnershipGuard --> PathSanitizer
+    Sanitizer --> PGVector
+    PathSanitizer --> Disk

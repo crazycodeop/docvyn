@@ -1,0 +1,29 @@
+graph TD
+    subgraph ClientBrowser [Client Browser]
+        ViteReact[React 18 SPA]
+    end
+
+    subgraph DockerHost [Docker Compose Environment]
+        Nginx[Nginx Reverse Proxy :80]
+        FastAPIApp[FastAPI Backend :8000]
+        CeleryWorker[Celery Worker Instance]
+        RedisQueue[Redis 7 Alpine :6379]
+        PostgresPGVector[PostgreSQL 16 + pgvector :5432]
+        LocalStorageVolume[Uploads Persistent Volume]
+    end
+
+    subgraph CloudFreeTier [Free Tier External Services]
+        SupabaseDB[Supabase Managed PostgreSQL]
+        GroqCloud[Groq AI Inference API]
+    end
+
+    ViteReact -->|HTTP / SPA Navigation| Nginx
+    Nginx -->|/api/v1 Proxy| FastAPIApp
+    FastAPIApp -->|Task Dispatch| RedisQueue
+    RedisQueue -->|Job Execution| CeleryWorker
+    FastAPIApp -->|Local DB Option| PostgresPGVector
+    FastAPIApp -->|Cloud DB Option| SupabaseDB
+    FastAPIApp -->|Local Storage| LocalStorageVolume
+    CeleryWorker -->|Process & Chunk| LocalStorageVolume
+    CeleryWorker -->|Vector Storage| PostgresPGVector
+    FastAPIApp -->|LLM Inference| GroqCloud

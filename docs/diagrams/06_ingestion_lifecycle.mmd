@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> Uploaded: User uploads PDF/DOCX
+    Uploaded --> Queued: DB Transaction Committed & Task Dispatched
+    Queued --> Processing: Celery Worker picks up job
+    Processing --> Extracting: PyMuPDF / python-docx parses pages
+    Extracting --> Chunking: Recursive chunker with overlap
+    Chunking --> Embedding: FastEmbed computes vectors
+    Embedding --> Storing: Atomic DB batch insert to pgvector
+    Storing --> Completed: Document marked completed
+    Processing --> Failed: Corrupt file or extraction exception
+    Failed --> Queued: User triggers /retry endpoint
+    Completed --> [*]

@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor User as Client User
+    participant API as FastAPI Backend
+    participant Auth as Auth & Ownership Guard
+    participant Emb as FastEmbed / SentenceTransformer
+    participant DB as Supabase PostgreSQL (pgvector)
+    participant LLM as Groq Cloud API (Llama 3.3)
+
+    User->>API: POST /api/v1/chat/query { question, document_ids? }
+    API->>Auth: Validate JWT & User Status
+    Auth-->>API: Authorized User Context
+    API->>Emb: get_embedding(question)
+    Emb-->>API: 384-dimensional query vector
+    API->>DB: Cosine Distance Query with User Ownership Filter
+    Note over API,DB: SELECT * FROM chunks JOIN docs ON ... WHERE doc.user_id = :uid ORDER BY embedding <=> query_vec
+    DB-->>API: Top-K Authorized Excerpts + Similarity Scores
+    API->>API: Construct Grounded Prompt with Injection Boundaries
+    API->>LLM: Chat Completion Request (System Instructions + Context + Query)
+    LLM-->>API: Synthesized Response with Citations [Source X]
+    API->>DB: Persist User & Assistant Messages with Citations
+    API-->>User: JSON Response { answer, citations: [ { title, page, snippet } ] }
