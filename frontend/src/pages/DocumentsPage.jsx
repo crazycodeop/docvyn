@@ -105,7 +105,9 @@ export default function DocumentsPage() {
       setTotal(data.total || 0);
       setError('');
     } catch (err) {
-      setError('Unable to load documents. Please check your connection and try again.');
+      if (showLoading) {
+        setError('Unable to load documents. Please check your connection and try again.');
+      }
     } finally {
       if (showLoading) setLoading(false);
     }

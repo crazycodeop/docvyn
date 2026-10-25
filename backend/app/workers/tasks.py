@@ -1,3 +1,4 @@
+import uuid
 from celery import Task
 from sqlalchemy import select, delete
 from app.core.logging import logger
@@ -116,6 +117,7 @@ def process_document_task(self, document_id: str):
         for c_data, emb in zip(chunks_data, embeddings):
             chunk_records.append(
                 DocumentChunk(
+                    id=str(uuid.uuid4()),
                     document_id=doc.id,
                     chunk_index=c_data.chunk_index,
                     content=c_data.content,
@@ -126,7 +128,7 @@ def process_document_task(self, document_id: str):
                 )
             )
 
-        db.bulk_save_objects(chunk_records)
+        db.add_all(chunk_records)
         doc.chunk_count = len(chunk_records)
         doc.status = "completed"
         doc.error_message = None
