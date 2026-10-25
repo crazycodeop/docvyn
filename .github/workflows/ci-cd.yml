@@ -14,6 +14,17 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -69,26 +80,22 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
   deploy:
-    name: Production Deployment Trigger
+    name: Production Deployment Verification
     needs: [backend-test, frontend-test-and-build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger Backend Deploy Webhook (Optional)
-        if: ${{ env.RENDER_DEPLOY_HOOK != '' || env.RAILWAY_DEPLOY_HOOK != '' }}
+      - name: Trigger Deploy Webhook (If Configured)
         run: |
           if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
-            echo "Triggering Render backend deployment..."
-            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+            echo "Triggering Render deployment webhook..."
+            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
           fi
           if [ -n "${{ secrets.RAILWAY_DEPLOY_HOOK }}" ]; then
-            echo "Triggering Railway backend deployment..."
-            curl -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
+            echo "Triggering Railway deployment webhook..."
+            curl -s -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK }}"
           fi
-        env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-          RAILWAY_DEPLOY_HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
 
-      - name: Deployment Notification
-        run: echo "CI tests and build passed successfully! Main branch ready for continuous delivery."
+      - name: Deployment Ready Notification
+        run: echo "All test suites and production build passed cleanly! Code is ready for deployment."
