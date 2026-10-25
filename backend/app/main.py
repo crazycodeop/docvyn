@@ -18,19 +18,31 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database schemas verified.")
 
-    # Re-dispatch any pending/stalled document ingestions from previous restarts
+    # Re-dispatch or cleanly fail any stalled document ingestions from previous restarts
     try:
         from app.services.document_service import doc_service
         from app.db.session import AsyncSessionLocal
         from app.models.document import Document
         from sqlalchemy import select
         async with AsyncSessionLocal() as session:
-            stalled_stmt = select(Document.id).where(Document.status.in_(["uploaded", "queued"]))
-            stalled_ids = (await session.execute(stalled_stmt)).scalars().all()
-            for doc_id in stalled_ids:
-                doc_service.dispatch_processing_task(doc_id)
-            if stalled_ids:
-                logger.info(f"Re-dispatched {len(stalled_ids)} pending document ingestion tasks.")
+            stalled_stmt = select(Document).where(Document.status.in_(["uploaded", "queued", "processing"]))
+            stalled_docs = (await session.execute(stalled_stmt)).scalars().all()
+            re_dispatched = 0
+            for doc in stalled_docs:
+                if doc_service.storage.exists(doc.file_path):
+                    doc.status = "queued"
+                    await session.commit()
+                    doc_service.dispatch_processing_task(doc.id)
+                    re_dispatched += 1
+                else:
+                    doc.status = "failed"
+                    doc.error_message = "Interrupted by container restart. Please delete and re-upload."
+                    current_meta = dict(doc.metadata_json or {})
+                    current_meta.update({"progress": 0, "stage": "failed"})
+                    doc.metadata_json = current_meta
+                    await session.commit()
+            if stalled_docs:
+                logger.info(f"Handled {len(stalled_docs)} stalled documents ({re_dispatched} re-dispatched, {len(stalled_docs) - re_dispatched} marked failed).")
     except Exception as e:
         logger.warning(f"Startup task re-dispatch warning: {e}")
 
