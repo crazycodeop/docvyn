@@ -1,3 +1,12 @@
+---
+title: Docvyn Backend
+emoji: 📑
+colorFrom: gray
+colorTo: zinc
+sdk: docker
+app_port: 7860
+---
+
 # DocRAG — Enterprise-Grade Document Intelligence Platform
 
 DocRAG is a production-oriented document intelligence platform that enables organizations to upload complex business documents (PDF, DOCX), process their contents through asynchronous distributed pipelines, store dense vector embeddings with **PostgreSQL / pgvector**, and execute grounded **Retrieval-Augmented Generation (RAG)** queries with verifiable source citations and exact page numbers.

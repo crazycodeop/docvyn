@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PORT="${PORT:-8000}"
+PORT="${PORT:-7860}"
 
 # If RUN_WORKER_IN_PROCESS is not false (default), background tasks run in a daemon thread inside FastAPI
 # to stay within Render Free Tier's 512MB RAM limit without duplicate process overhead.

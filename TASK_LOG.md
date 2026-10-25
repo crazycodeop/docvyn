@@ -29,18 +29,11 @@
   - Localhost Google login verified by user.
 
 ### Recent Task Completed
-- **Task**: Fix Accidental Logouts, Google Sign-in Button Sizing, and Chat Document Selection
-  - **Accidental Logout Prevention**:
-    - Previously, if the backend was restarting (returning 502/503 or transient network errors), `AuthContext.initAuth()` and `client.js` caught any error and wiped `docrag_access_token`, logging the user out.
-    - Updated `AuthContext.jsx` and `client.js` to only clear authentication credentials when the backend explicitly responds with `401 Unauthorized`.
-  - **Google Login Button Sizing**:
-    - Google Identity Services (GSI) rejected `width="100%"` as an invalid numeric width, causing the button to shrink to its minimum 200px size.
-    - Updated `width="368"` and added `[&_iframe]:!w-full` in `LoginPage.jsx` and `RegisterPage.jsx` to render the button at full card width.
-  - **Chat Document Selection & Live Polling**:
-    - In `ChatPage.jsx`, `fetchDocuments()` was strictly querying `{ status: 'completed' }`, which omitted newly uploaded documents from `availableDocs` while they were being indexed.
-    - Removed the status filter so uploaded documents immediately populate the dropdown with an active `(Processing...)` badge.
-    - Added an automatic 2.5-second status poller that refreshes documents while any document is in `queued` or `processing`.
-    - Added user-friendly guidance in `handleSendMessage` if a question is submitted before indexing completes.
+- **Task**: Configure Hugging Face Spaces (Docker) for 16 GB RAM Deployment
+  - **Hugging Face Spaces Configuration**:
+    - Created root [`Dockerfile`](file:///home/vakildesk/Documents/docrag/Dockerfile) configured for Hugging Face Spaces with non-root UID 1000 user, `PORT=7860`, pre-baked FastEmbed cache, and permissions for `/app/uploads`.
+    - Added Hugging Face Space metadata frontmatter to [`README.md`](file:///home/vakildesk/Documents/docrag/README.md) (`sdk: docker`, `app_port: 7860`).
+    - Updated [`backend/start.sh`](file:///home/vakildesk/Documents/docrag/backend/start.sh) to default to port 7860 while honoring host dynamic ports.
   - **Verification**:
     - Backend Pytest: 22/22 passed.
     - Frontend Vitest: 25/25 passed.
@@ -52,4 +45,4 @@
 - **Frontend Build**: Built cleanly with zero errors.
 
 ### Next Step
-- Commit and push to GitHub `main` for automatic Vercel deployment.
+- Guide user to create the Space on Hugging Face, add environment variables, and push to deploy.
