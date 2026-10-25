@@ -28,10 +28,10 @@ jobs:
 
       - name: Run Pytest suite
         env:
-          ENVIRONMENT: test
-          SECRET_KEY: test-ci-secret-key-for-jwt-signing-minimum-32-chars
-          DATABASE_URL: sqlite+aiosqlite:///:memory:
-          REDIS_URL: redis://localhost:6379/0
+          ENVIRONMENT: 'test'
+          SECRET_KEY: 'test-ci-secret-key-for-jwt-signing-minimum-32-chars'
+          DATABASE_URL: 'sqlite+aiosqlite:///:memory:'
+          REDIS_URL: 'redis://localhost:6379/0'
         run: |
           PYTHONPATH=backend pytest backend/tests -v
 
