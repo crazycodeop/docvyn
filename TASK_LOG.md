@@ -89,5 +89,6 @@
   4. **Google Sign-In Button Clipping**:
      - Fixed `LoginPage.jsx` and `RegisterPage.jsx` container width (`width="350"` without `overflow-hidden` or `!w-full`), stopping right-edge logo cutoffs.
   5. **Natural Greetings without AI-Style Hyphens**:
-     - Added prompt rules and post-processing in `rag_service.py` to prevent em-dashes (`—`) or awkward hyphens in greeting messages.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`bb7a80a`).
+     - Converted standard greetings ("hi", "hello", "hiiii", "hey") to return an immediate, natural human greeting: `"Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."`
+     - Added strict regex replacement for any em-dashes (`—`), en-dashes (`–`), or hyphens (`-`) used as punctuation in conversational responses.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`cf663a7`).
