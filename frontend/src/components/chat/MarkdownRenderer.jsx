@@ -27,7 +27,7 @@ function CodeBlock({ language, value }) {
   };
 
   return (
-    <div className="relative my-3 rounded-xl overflow-hidden border border-[#282828] bg-[#141414] select-text group">
+    <div className="relative my-3 rounded-xl overflow-hidden border border-[#282828] bg-[#141414] select-text group max-w-full">
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#1c1c1c] border-b border-[#282828] text-[11px] text-[#8e8e8e] font-mono select-none">
         <span>{language || 'code'}</span>
         <button
@@ -48,7 +48,7 @@ function CodeBlock({ language, value }) {
           )}
         </button>
       </div>
-      <pre className="p-3.5 overflow-x-auto font-mono text-xs leading-relaxed text-[#ededed] select-text">
+      <pre className="p-3.5 overflow-x-auto font-mono text-xs leading-relaxed text-[#ededed] select-text max-w-full">
         <code>{value}</code>
       </pre>
     </div>
@@ -62,7 +62,7 @@ CodeBlock.propTypes = {
 
 export default function MarkdownRenderer({ content = '' }) {
   return (
-    <div className="markdown-content select-text font-sans text-sm leading-relaxed text-[#ededed]">
+    <div className="markdown-content select-text font-sans text-sm leading-relaxed text-[#ededed] min-w-0 max-w-full break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

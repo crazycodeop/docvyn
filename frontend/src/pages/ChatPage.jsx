@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   X as CloseIcon,
   PanelLeftOpen,
+  MoreVertical,
 } from 'lucide-react';
 
 const ALLOWED_EXTS = ['.pdf', '.docx', '.png', '.jpg', '.jpeg', '.tiff'];
@@ -101,6 +102,9 @@ export default function ChatPage() {
   // Share Modal
   const [showShareModal, setShowShareModal] = useState(false);
 
+  // Mobile Top Actions Menu (...)
+  const [showMobileActionsMenu, setShowMobileActionsMenu] = useState(false);
+
   // Archived Modal
   const [showArchivedModal, setShowArchivedModal] = useState(false);
 
@@ -123,6 +127,7 @@ export default function ChatPage() {
   const fileInputRefLanding = useRef(null);
   const fileInputRefThread = useRef(null);
   const docFilterRef = useRef(null);
+  const mobileActionsMenuRef = useRef(null);
   const { isSidebarCollapsed, toggleSidebarCollapse } = useSidebar();
 
   // Close document filter dropdown when clicking outside or pressing Escape
@@ -154,6 +159,33 @@ export default function ChatPage() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [docFilterAnchor]);
+
+  // Close mobile actions menu when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!showMobileActionsMenu) return;
+
+    const handleClickOutside = (e) => {
+      if (mobileActionsMenuRef.current && !mobileActionsMenuRef.current.contains(e.target)) {
+        setShowMobileActionsMenu(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowMobileActionsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showMobileActionsMenu]);
 
   useEffect(() => {
     fetchDocuments();
@@ -660,7 +692,11 @@ export default function ChatPage() {
       <div
         ref={docFilterRef}
         className={`absolute ${
-          isUpward ? 'bottom-full mb-2 left-0' : 'top-full mt-2 left-0'
+          isUpward
+            ? 'bottom-full mb-2 left-0'
+            : anchor === 'header'
+            ? 'top-full mt-2 right-0 sm:right-auto sm:left-0'
+            : 'top-full mt-2 left-0'
         } w-80 max-w-[90vw] bg-[#1c1c1c] rounded-xl shadow-2xl border border-[#2e2e2e] p-3 z-50 animate-slide-up select-none`}
       >
         <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#282828] text-xs font-heading font-semibold text-white px-1">
@@ -779,53 +815,107 @@ export default function ChatPage() {
           </div>
 
           {/* Right Controls: Find, Share, PDF Export & Document Scope Filter */}
-          <div className="flex items-center gap-2">
-            {/* Find in Chat Button */}
-            <button
-              onClick={() => setShowFindBar(!showFindBar)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[12px] font-medium transition cursor-pointer select-none ${
-                showFindBar
-                  ? 'bg-[#262626] border-[#383838] text-white'
-                  : 'border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[#8a8a8a] hover:text-white'
-              }`}
-              title="Find in conversation (Ctrl+F)"
-            >
-              <Search className="w-3.5 h-3.5 text-white/80" />
-              <span>Find</span>
-              <span className="hidden sm:inline text-[9px] bg-[#222222] text-[#8e8e8e] px-1 py-0.5 rounded font-mono border border-[#2e2e2e]">
-                Ctrl F
-              </span>
-            </button>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Desktop Action Buttons: Find, Share, PDF Export */}
+            <div className="hidden sm:flex items-center gap-2">
+              {/* Find in Chat Button */}
+              <button
+                onClick={() => setShowFindBar(!showFindBar)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[12px] font-medium transition cursor-pointer select-none ${
+                  showFindBar
+                    ? 'bg-[#262626] border-[#383838] text-white'
+                    : 'border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[#8a8a8a] hover:text-white'
+                }`}
+                title="Find in conversation (Ctrl+F)"
+              >
+                <Search className="w-3.5 h-3.5 text-white/80" />
+                <span>Find</span>
+                <span className="text-[9px] bg-[#222222] text-[#8e8e8e] px-1 py-0.5 rounded font-mono border border-[#2e2e2e]">
+                  Ctrl F
+                </span>
+              </button>
 
-            {/* Share Conversation Button */}
-            <button
-              onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[12px] font-medium text-[#8a8a8a] hover:text-white transition cursor-pointer"
-              title="Share conversation link"
-            >
-              <Share2 className="w-3.5 h-3.5 text-white/80" />
-              <span className="hidden sm:inline">Share</span>
-            </button>
+              {/* Share Conversation Button */}
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[12px] font-medium text-[#8a8a8a] hover:text-white transition cursor-pointer"
+                title="Share conversation link"
+              >
+                <Share2 className="w-3.5 h-3.5 text-white/80" />
+                <span>Share</span>
+              </button>
 
-            {/* PDF Export Button */}
-            <button
-              onClick={handleExportPdf}
-              disabled={isExportingPdf}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[12px] font-medium text-[#8a8a8a] hover:text-white transition cursor-pointer disabled:opacity-40"
-              title="Download entire conversation as PDF"
-            >
-              {isExportingPdf ? (
-                <>
-                  <Spinner size="sm" />
-                  <span className="hidden sm:inline">Exporting...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5 text-white/80" />
-                  <span className="hidden sm:inline">Download PDF</span>
-                </>
+              {/* PDF Export Button */}
+              <button
+                onClick={handleExportPdf}
+                disabled={isExportingPdf}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[12px] font-medium text-[#8a8a8a] hover:text-white transition cursor-pointer disabled:opacity-40"
+                title="Download entire conversation as PDF"
+              >
+                {isExportingPdf ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Exporting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-white/80" />
+                    <span>Download PDF</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Mobile Actions Dropdown Trigger (...) */}
+            <div className="relative sm:hidden" ref={mobileActionsMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowMobileActionsMenu((prev) => !prev)}
+                className="p-1.5 rounded-lg border border-[#262626] bg-[#1a1a1a] text-[#8a8a8a] hover:text-white transition cursor-pointer"
+                title="More actions"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {showMobileActionsMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#1c1c1c] border border-[#2e2e2e] rounded-xl shadow-2xl p-1.5 z-50 animate-slide-up">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileActionsMenu(false);
+                      setShowFindBar(!showFindBar);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[#d4d4d4] hover:bg-[#282828] hover:text-white transition text-left cursor-pointer"
+                  >
+                    <Search className="w-3.5 h-3.5 text-white/80" />
+                    <span>Find in Chat</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileActionsMenu(false);
+                      setShowShareModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[#d4d4d4] hover:bg-[#282828] hover:text-white transition text-left cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-white/80" />
+                    <span>Share Link</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileActionsMenu(false);
+                      handleExportPdf();
+                    }}
+                    disabled={isExportingPdf}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[#d4d4d4] hover:bg-[#282828] hover:text-white transition text-left cursor-pointer disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5 text-white/80" />
+                    <span>{isExportingPdf ? 'Exporting...' : 'Download PDF'}</span>
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
 
             {/* Document Scope Selector in Header */}
             <div className="relative">
@@ -836,7 +926,7 @@ export default function ChatPage() {
                   fetchDocuments();
                   setDocFilterAnchor((prev) => (prev === 'header' ? null : 'header'));
                 }}
-                className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[12px] font-sans font-medium transition cursor-pointer select-none ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-lg border text-[12px] font-sans font-medium transition cursor-pointer select-none ${
                   selectedDocIds.length > 0 || docFilterAnchor === 'header'
                     ? 'bg-[#242424] border-white/20 text-white'
                     : 'border-[#262626] bg-[#1a1a1a] hover:bg-[#242424] text-[#a3a3a3] hover:text-white'
@@ -844,10 +934,13 @@ export default function ChatPage() {
                 title="Filter query retrieval to specific indexed documents"
               >
                 <Folder className="w-3.5 h-3.5 text-white/80" />
-                <span>
+                <span className="hidden sm:inline">
                   {selectedDocIds.length === 0
                     ? 'All Documents'
                     : `${selectedDocIds.length} Selected`}
+                </span>
+                <span className="sm:hidden font-mono text-[11px]">
+                  {selectedDocIds.length === 0 ? 'All' : selectedDocIds.length}
                 </span>
                 <ChevronDown
                   className={`w-3 h-3 text-[#8e8e8e] transition-transform duration-200 ${
@@ -1106,26 +1199,26 @@ export default function ChatPage() {
                   return (
                     <div
                       key={msgId}
-                      className={`flex flex-col animate-slide-up ${
+                      className={`flex flex-col animate-slide-up w-full min-w-0 ${
                         isUser ? 'items-end' : 'items-start'
                       }`}
                     >
-                      <div className="flex items-start gap-3 max-w-3xl w-full">
+                      <div className="flex items-start gap-2.5 sm:gap-3 max-w-3xl w-full min-w-0">
                         {!isUser && (
-                          <div className="w-7 h-7 rounded-full bg-[#242424] text-white flex items-center justify-center shrink-0 mt-1 border border-[#333333] select-none text-xs font-bold font-aleo">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#242424] text-white flex items-center justify-center shrink-0 mt-0.5 sm:mt-1 border border-[#333333] select-none text-[11px] sm:text-xs font-bold font-aleo">
                             d
                           </div>
                         )}
 
                         <div
-                          className={`w-full select-text ${
-                            isUser ? 'ml-auto max-w-2xl flex flex-col items-end group' : ''
+                          className={`w-full min-w-0 select-text ${
+                            isUser ? 'ml-auto max-w-[85%] sm:max-w-2xl flex flex-col items-end group' : ''
                           }`}
                         >
                           {isUser ? (
                             editingMessageId === msgId ? (
                               /* Inline Edit Mode (matching ChatGPT) */
-                              <div className="w-full flex flex-col gap-2.5 rounded-2xl bg-[#222222] border border-[#383838] p-3.5 shadow-sm text-left">
+                              <div className="w-full flex flex-col gap-2.5 rounded-2xl bg-[#222222] border border-[#383838] p-3 sm:p-3.5 shadow-sm text-left">
                                 <textarea
                                   value={editingContent}
                                   onChange={(e) => setEditingContent(e.target.value)}
@@ -1139,7 +1232,7 @@ export default function ChatPage() {
                                     }
                                   }}
                                   rows={Math.max(2, editingContent.split('\n').length)}
-                                  className="w-full bg-[#181817] border border-[#383838] focus:border-[#555555] rounded-xl p-3 text-sm text-white outline-none resize-none leading-relaxed font-sans"
+                                  className="w-full bg-[#181817] border border-[#383838] focus:border-[#555555] rounded-xl p-2.5 sm:p-3 text-sm text-white outline-none resize-none leading-relaxed font-sans"
                                   autoFocus
                                 />
                                 <div className="flex items-center justify-end gap-2">
@@ -1174,16 +1267,16 @@ export default function ChatPage() {
                               </div>
                             ) : (
                               /* Normal User Message Display: Bubble + Outside Action Buttons Below (Image 2) */
-                              <div className="flex flex-col items-end w-full">
-                                <div className="rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-sm w-full select-text bg-[#222222] border border-[#2e2e2e] text-white rounded-tr-sm text-left">
-                                  <p className="whitespace-pre-wrap font-sans text-sm select-text text-white">
+                              <div className="flex flex-col items-end w-full min-w-0">
+                                <div className="rounded-3xl sm:rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3.5 text-sm leading-relaxed shadow-sm w-full select-text bg-[#262626] sm:bg-[#222222] border border-[#333333] sm:border-[#2e2e2e] text-white rounded-br-sm sm:rounded-tr-sm text-left break-words">
+                                  <p className="whitespace-pre-wrap font-sans text-sm select-text text-white break-words">
                                     {msg.content}
                                   </p>
                                 </div>
 
                                 {/* Actions OUTSIDE below the user message bubble (matching Image 2) */}
                                 {!activeConversation?.is_archived && (
-                                  <div className="flex items-center gap-3 pt-1.5 pr-1 opacity-0 group-hover:opacity-100 transition-opacity select-none">
+                                  <div className="flex items-center gap-3 pt-1.5 pr-1 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity select-none">
                                     <button
                                       type="button"
                                       onClick={() => handleStartEdit(msg)}
@@ -1216,12 +1309,14 @@ export default function ChatPage() {
                               </div>
                             )
                           ) : (
-                            <div className="rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-sm w-full select-text bg-[#1a1a1a] border border-[#262626] text-[#ededed] rounded-tl-sm text-left">
+                            <div className="rounded-2xl p-0 sm:px-5 sm:py-3.5 text-sm leading-relaxed shadow-none sm:shadow-sm w-full min-w-0 max-w-full select-text bg-transparent sm:bg-[#1a1a1a] border-0 sm:border border-transparent sm:border-[#262626] text-[#ededed] text-left break-words">
                               {/* Assistant Markdown Renderer */}
-                              <MarkdownRenderer content={msg.content} />
+                              <div className="w-full min-w-0 max-w-full overflow-hidden break-words">
+                                <MarkdownRenderer content={msg.content} />
+                              </div>
 
                               {/* Response Actions Bar (Unobtrusive Copy button) */}
-                              <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-[#262626] select-none">
+                              <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-[#222222] sm:border-[#262626] select-none">
                                 <span className="text-[10px] text-[#707070] font-mono">
                                   {msg.created_at
                                     ? new Date(msg.created_at).toLocaleTimeString([], {
@@ -1233,7 +1328,7 @@ export default function ChatPage() {
 
                                 <button
                                   onClick={() => handleCopyMessage(msgId, msg.content)}
-                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[#8e8e8e] hover:text-white hover:bg-[#262626] text-xs transition cursor-pointer"
+                                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[#8e8e8e] hover:text-white hover:bg-[#202020] text-xs transition cursor-pointer"
                                   title="Copy response to clipboard"
                                 >
                                   {isCopied ? (
@@ -1254,7 +1349,7 @@ export default function ChatPage() {
                         </div>
 
                         {isUser && (
-                          <div className="w-7 h-7 rounded-full bg-[#222222] text-[#8e8e8e] flex items-center justify-center shrink-0 mt-1 select-none border border-[#2c2c2c]">
+                          <div className="hidden sm:flex w-7 h-7 rounded-full bg-[#222222] text-[#8e8e8e] items-center justify-center shrink-0 mt-1 select-none border border-[#2c2c2c]">
                             <User className="w-3.5 h-3.5" />
                           </div>
                         )}
@@ -1262,16 +1357,16 @@ export default function ChatPage() {
 
                     {/* Grounded Citations with Download Action */}
                     {!isUser && msg.citations_json && msg.citations_json.length > 0 && (
-                      <div className="mt-3.5 pl-10 max-w-3xl w-full select-text">
+                      <div className="mt-3 pl-8 sm:pl-10 max-w-3xl w-full min-w-0 select-text">
                         <p className="font-sans text-[11px] font-semibold text-[#8e8e8e] uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
                           <Bookmark className="w-3.5 h-3.5 text-white/80" />
                           <span>Sources ({msg.citations_json.length})</span>
                         </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 snap-x scrollbar-thin">
                           {msg.citations_json.map((citation, citIdx) => (
                             <div
                               key={citIdx}
-                              className="bg-[#1a1a1a] border border-[#282828] hover:border-[#383838] p-3 rounded-xl transition shadow-sm group select-text"
+                              className="min-w-[260px] sm:min-w-0 snap-start shrink-0 sm:shrink bg-[#1a1a1a] border border-[#282828] hover:border-[#383838] p-3 rounded-xl transition shadow-sm group select-text"
                             >
                               <div className="flex items-center justify-between gap-2 select-none">
                                 <span className="text-[10px] font-semibold tracking-wider text-white bg-[#262626] px-2 py-0.5 rounded border border-[#333333]">
@@ -1336,7 +1431,7 @@ export default function ChatPage() {
 
           {/* Floating Bottom Dock (when in active chat thread) */}
           {messages.length > 0 && (
-            <div className="p-4 bg-[#141414] border-t border-[#222222] shrink-0">
+            <div className="p-2.5 sm:p-4 bg-[#121212] border-t border-[#202020] shrink-0">
               <div className="max-w-4xl mx-auto">
                 {isListening && (
                   <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-900/60 text-xs text-rose-300 font-sans animate-pulse">
@@ -1353,6 +1448,25 @@ export default function ChatPage() {
                       className="text-rose-400 hover:text-white ml-2"
                     >
                       ✕
+                    </button>
+                  </div>
+                )}
+
+                {/* Scoped Document Indicator (Mobile Chip) */}
+                {selectedDocIds.length > 0 && (
+                  <div className="sm:hidden flex items-center justify-between text-[11px] text-[#a0a0a0] mb-2 px-2.5 py-1 bg-[#1c1c1c] rounded-lg border border-[#2a2a2a]">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Folder className="w-3 h-3 text-white/80 shrink-0" />
+                      <span className="truncate">
+                        Scoped to {selectedDocIds.length} doc{selectedDocIds.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDocIds([])}
+                      className="text-[11px] text-[#8e8e8e] hover:text-white ml-2 shrink-0 cursor-pointer"
+                    >
+                      Clear
                     </button>
                   </div>
                 )}
@@ -1374,7 +1488,7 @@ export default function ChatPage() {
                       processFiles(e.dataTransfer.files);
                     }
                   }}
-                  className={`rounded-2xl bg-[#1f1f1f] border shadow-xl p-3 transition-all ${
+                  className={`rounded-3xl sm:rounded-2xl bg-[#1e1e1e] sm:bg-[#1f1f1f] border shadow-xl p-2 sm:p-3 transition-all ${
                     isDraggingThread
                       ? 'border-white bg-[#262626]'
                       : 'border-[#2d2d2d] focus-within:border-[#424242]'
@@ -1396,7 +1510,7 @@ export default function ChatPage() {
                   {/* Render Removable Attachment Chips */}
                   {renderAttachmentChips()}
 
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5">
                     {/* Plus (+) Button -> Real File Picker */}
                     <button
                       type="button"
@@ -1407,8 +1521,8 @@ export default function ChatPage() {
                       <Plus className="w-4 h-4" />
                     </button>
 
-                    {/* Scoped Document Pill */}
-                    <div className="relative shrink-0">
+                    {/* Scoped Document Pill on Desktop */}
+                    <div className="relative shrink-0 hidden sm:block">
                       <button
                         type="button"
                         data-doc-filter-toggle="true"
@@ -1449,8 +1563,8 @@ export default function ChatPage() {
                           handleSendMessage();
                         }
                       }}
-                      placeholder="Ask a follow-up question..."
-                      className="font-sans w-full bg-transparent text-[14px] text-[#ededed] placeholder-[#737373] outline-none resize-none px-1.5 py-1"
+                      placeholder="Ask docvyn..."
+                      className="font-sans flex-1 min-w-0 bg-transparent text-[14px] text-[#ededed] placeholder-[#737373] outline-none resize-none px-2 py-1 leading-normal"
                     />
 
                     {/* Speech to text microphone button */}
