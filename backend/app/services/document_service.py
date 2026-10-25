@@ -187,3 +187,6 @@ class DocumentService:
 
         content = self.storage.load(doc.file_path)
         return content, doc
+
+
+doc_service = DocumentService()

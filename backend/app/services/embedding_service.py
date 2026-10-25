@@ -35,9 +35,22 @@ class EmbeddingService:
             return None
         if self._local_model is None:
             try:
-                # Initialize FastEmbed model (uses cached weights if available)
-                self._local_model = TextEmbedding(model_name=self.model_name)
-                logger.info(f"Initialized local FastEmbed model: {self.model_name}")
+                # Use persistent cache directory if available to prevent runtime downloads
+                cache_dir = os.getenv("FASTEMBED_CACHE_PATH", "/app/model_cache")
+                if os.path.exists(cache_dir):
+                    try:
+                        self._local_model = TextEmbedding(
+                            model_name=self.model_name,
+                            cache_dir=cache_dir,
+                            local_files_only=True,
+                        )
+                        logger.info(f"Loaded local FastEmbed model offline from: {cache_dir}")
+                    except Exception as offline_err:
+                        logger.warning(f"Offline FastEmbed load failed ({offline_err}), attempting online check...")
+                        self._local_model = TextEmbedding(model_name=self.model_name, cache_dir=cache_dir)
+                else:
+                    self._local_model = TextEmbedding(model_name=self.model_name)
+                    logger.info(f"Initialized local FastEmbed model: {self.model_name}")
             except Exception as e:
                 logger.warning(f"FastEmbed initialization error: {e}. Falling back to deterministic embeddings.")
                 self._local_model = False

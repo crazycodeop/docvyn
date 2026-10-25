@@ -28,11 +28,23 @@
   - Local tests: 22/22 backend passed, 25/25 frontend passed.
   - Localhost Google login verified by user.
 
+### Recent Task Completed
+- **Task**: Render Production Deployment & FastEmbed Offline Model Baking
+  - **FastEmbed Offline Baking**:
+    - Pre-cached FastEmbed ONNX model (`BAAI/bge-small-en-v1.5`) into `/app/model_cache` during Docker build.
+    - Updated `embedding_service.py` with `local_files_only=True` to eliminate runtime Hugging Face network downloads and prevent timeout/OOM restarts.
+  - **Celery & Render Concurrency Optimization**:
+    - Switched Celery worker pool to `--pool=solo` to eliminate duplicate prefork processes and preserve memory within Render's 512MB tier.
+    - Added SSL certificate bypass (`ssl_cert_reqs=CERT_NONE`) for Upstash Redis TLS broker URLs.
+    - Exposed `doc_service` singleton in `document_service.py` to support startup task re-dispatch for pending/stalled uploads.
+  - **Verification**:
+    - Local tests: 22/22 backend passed, 25/25 frontend passed.
+    - Frontend build: Passed with zero errors.
+
 ### Verification Results
-- **GitHub Actions CI**: Green / Passing (100% test pass rate).
 - **Backend Tests**: 22/22 passed.
 - **Frontend Tests**: 25/25 passed.
 - **Frontend Build**: Built cleanly with zero errors.
 
 ### Next Step
-- Connect repository to Vercel and Railway/Render for production hosting.
+- Push changes to GitHub and trigger Render redeployment to verify end-to-end document processing and RAG chat in production.
