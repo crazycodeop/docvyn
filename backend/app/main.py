@@ -80,3 +80,8 @@ def root():
         "docs": f"{settings.API_V1_STR}/docs",
         "version": "1.0.0",
     }
+
+
+@app.get("/health", tags=["Health"])
+def health():
+    return {"status": "ok", "service": "docvyn", "environment": settings.ENVIRONMENT}
