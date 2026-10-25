@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
@@ -11,12 +11,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleWidth, setGoogleWidth] = useState(null);
+  const googleContainerRef = useRef(null);
 
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname || '/';
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      if (googleContainerRef.current) {
+        const w = googleContainerRef.current.offsetWidth;
+        if (w > 0) {
+          setGoogleWidth(Math.min(400, Math.max(200, Math.floor(w))));
+        }
+      }
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,14 +130,14 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex justify-center w-full min-h-[44px]">
+          <div ref={googleContainerRef} className="flex justify-center w-full min-h-[44px]">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google sign-in failed. Please try again.')}
               theme="filled_black"
               shape="rectangular"
               size="large"
-              width="350"
+              width={googleWidth ? String(googleWidth) : '280'}
               text="signin_with"
             />
           </div>
