@@ -46,3 +46,15 @@
 
 ### Next Step
 - Guide user to create the Space on Hugging Face, add environment variables, and push to deploy.
+
+## Mobile Web UI Overhaul (ChatGPT Visual Parity)
+- **Status**: Completed & Verified
+- **Changes**:
+  - `frontend/src/components/layout/AppLayout.jsx`: Edge-to-edge layout on mobile with unified top bar.
+  - `frontend/src/components/chat/MarkdownRenderer.jsx`: Enforced `min-w-0 max-w-full break-words` to eliminate horizontal scroll.
+  - `frontend/src/pages/ChatPage.jsx`:
+    - Top header: Consolidated desktop buttons into a mobile `...` dropdown menu (`MoreVertical`); rendered document scope badge compactly (`[📁 All]` / `[📁 1]`).
+    - Chat messages: Borderless distraction-free assistant response on mobile, sleek pill user bubble, user avatar hidden on mobile.
+    - Citations: Converted vertical card pile into horizontal swipeable snap carousel.
+    - Composer: Scoped document chip moved above input row on mobile to provide 100% full-width input for textarea without placeholder wrapping.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build passed, 22/22 pytest backend tests passed. Pushed to `main`.
