@@ -29,17 +29,17 @@
   - Localhost Google login verified by user.
 
 ### Recent Task Completed
-- **Task**: Render Production Deployment & FastEmbed Offline Model Baking
-  - **FastEmbed Offline Baking**:
-    - Pre-cached FastEmbed ONNX model (`BAAI/bge-small-en-v1.5`) into `/app/model_cache` during Docker build.
-    - Updated `embedding_service.py` with `local_files_only=True` to eliminate runtime Hugging Face network downloads and prevent timeout/OOM restarts.
-  - **Celery & Render Concurrency Optimization**:
-    - Switched Celery worker pool to `--pool=solo` to eliminate duplicate prefork processes and preserve memory within Render's 512MB tier.
-    - Added SSL certificate bypass (`ssl_cert_reqs=CERT_NONE`) for Upstash Redis TLS broker URLs.
-    - Exposed `doc_service` singleton in `document_service.py` to support startup task re-dispatch for pending/stalled uploads.
+- **Task**: Fix FastEmbed Missing `os` Import & Enable Real Semantic RAG Retrieval
+  - **Issue**:
+    - During document processing on Render, Celery logged: `FastEmbed initialization error: name 'os' is not defined. Falling back to deterministic embeddings.`
+    - Because `os` was missing at the top of `embedding_service.py`, all document chunks received hash-based pseudo-embeddings with zero semantic similarity.
+    - When queries were executed in chat, pgvector cosine distance failed to match relevant chunks (e.g. for "what is closure?"), resulting in 0 retrieved sources and triggering the guardrail fallback: `"The provided documents do not contain sufficient information to answer this question."`
+  - **Fix**:
+    - Added `import os` to `backend/app/services/embedding_service.py`.
+    - Verified `EmbeddingService.get_embedding()` produces valid 384-dimensional FastEmbed vectors locally and offline.
   - **Verification**:
-    - Local tests: 22/22 backend passed, 25/25 frontend passed.
-    - Frontend build: Passed with zero errors.
+    - Local backend tests: 22/22 passed.
+    - Frontend build: Passed.
 
 ### Verification Results
 - **Backend Tests**: 22/22 passed.
@@ -47,4 +47,4 @@
 - **Frontend Build**: Built cleanly with zero errors.
 
 ### Next Step
-- Push changes to GitHub and trigger Render redeployment to verify end-to-end document processing and RAG chat in production.
+- Push changes to GitHub `main`, trigger Render redeployment, and re-upload/re-process the document to populate real semantic vectors in pgvector.
