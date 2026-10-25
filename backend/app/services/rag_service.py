@@ -239,13 +239,43 @@ CRITICAL INSTRUCTIONS:
         question: str,
         conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> str:
-        """Generates a warm, intelligent conversational greeting for the user."""
+        """Generates a warm, human conversational greeting without AI-style hyphens or dashes."""
+        clean = question.strip().lower()
+        clean = re.sub(r"[?!.,!]+$", "", clean).strip()
+        clean_collapsed = re.sub(r"(.)\1{2,}", r"\1\1", clean)
+
+        # Immediate natural responses for common greetings (zero latency, zero hyphens/em-dashes)
+        simple_greetings = {
+            "hi", "hii", "hiii", "hello", "helloo", "hey", "heyy", "heyyy", "hiya",
+            "howdy", "hola", "namaste", "sup", "yo", "greetings", "hai"
+        }
+        if clean in simple_greetings or clean_collapsed in simple_greetings:
+            return "Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."
+
+        if any(g in clean for g in ["good morning", "good afternoon", "good evening", "good day"]):
+            return "Hello! Good day. How can I assist you with your documents today?"
+
+        if "who are you" in clean or "what is docvyn" in clean:
+            return "I am **docvyn**, your AI-powered document intelligence assistant. You can upload PDFs, documents, or images, and ask me to search, explain, or extract information with grounded citations."
+
+        if "what can you do" in clean or clean in {"help", "help me"}:
+            return "I can extract text from PDFs and scanned documents, perform grounded searches with page citations, summarize complex reports, and answer questions based on your uploaded files. How can I help you today?"
+
+        if "how are you" in clean or "how r u" in clean or "how do you do" in clean:
+            return "I'm doing well, thank you! Ready to help you with your documents. What would you like to explore?"
+
+        if "thank" in clean:
+            return "You're very welcome! Let me know if you need help with anything else."
+
+        if "bye" in clean or "goodbye" in clean:
+            return "Goodbye! Feel free to come back whenever you need help analyzing your documents."
+
+        # For other conversational queries, invoke LLM with strict human-like formatting
         system_prompt = (
-            "You are docvyn, a modern and intelligent enterprise document assistant. "
-            "Respond warmly, politely, and concisely (1 to 2 sentences) to the user's greeting or question. "
-            "Welcome them, let them know you are ready to help them explore, search, or summarize their documents, "
-            "and invite them to ask a question or upload files. "
-            "IMPORTANT: Do not use em-dashes (—) or hyphens as punctuation. Use clean, natural sentences with commas and periods."
+            "You are docvyn, a modern document intelligence assistant. "
+            "Respond warmly, politely, and concisely (1 to 2 short sentences). "
+            "Write natural, human sentences with periods and commas. "
+            "NEVER use em-dashes (—), en-dashes (–), or hyphens (-) as sentence punctuation."
         )
 
         if self.groq_client and settings.GROQ_API_KEY:
@@ -260,28 +290,19 @@ CRITICAL INSTRUCTIONS:
                 chat_completion = self.groq_client.chat.completions.create(
                     model=settings.GROQ_MODEL,
                     messages=messages,
-                    temperature=0.4,
-                    max_tokens=150,
+                    temperature=0.3,
+                    max_tokens=100,
                 )
                 answer_text = chat_completion.choices[0].message.content or ""
-                # Strip out any em-dashes or awkward artificial hyphens
-                answer_text = answer_text.replace("—", ", ").replace(" – ", ", ")
-                if answer_text.strip():
-                    return answer_text.strip()
+                # Strip any em-dashes, en-dashes, or hyphens used as punctuation
+                answer_text = re.sub(r"\s*[—–\-]+\s*", ". ", answer_text)
+                answer_text = re.sub(r"\.\s*\.", ".", answer_text).strip()
+                if answer_text:
+                    return answer_text
             except Exception as e:
                 logger.warning(f"Groq conversational response failed: {e}")
 
-        clean = question.strip().lower()
-        if "who are you" in clean or "what is docvyn" in clean:
-            return "I am **docvyn**, your AI-powered document intelligence assistant. You can upload PDFs, documents, or images, and ask me to search, explain, or extract information with grounded citations."
-        if "what can you do" in clean or "help" in clean:
-            return "I can help you extract text from PDFs and scanned documents, perform grounded searches with page citations, summarize complex reports, and answer questions based on your uploaded files. How can I help you today?"
-        if "thank" in clean:
-            return "You're very welcome! Let me know if you need help with anything else in your documents."
-        if "bye" in clean:
-            return "Goodbye! Feel free to come back whenever you need help analyzing your documents."
-
-        return "Hello! I am **docvyn**, your document intelligence assistant. How can I help you today? Feel free to ask questions about your documents or attach new files to explore."
+        return "Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."
 
     async def answer_query(
         self,
