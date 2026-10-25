@@ -29,14 +29,18 @@
   - Localhost Google login verified by user.
 
 ### Recent Task Completed
-- **Task**: Fix Container OOM Crash on Render Free Tier & Add Detailed Processing Logs
-  - **Root Cause of Silent Container Restart**:
-    - Measuring real memory usage revealed FastEmbed with default `batch_size=256` and multi-threading spiked memory to **848 MB** during chunk embedding.
-    - Combined with two concurrent Python processes (Uvicorn + Celery worker), container memory exceeded Render's 512 MB limit. The Linux kernel sent `SIGKILL` (137) to the container at 09:03:44 without logging a Python stack trace.
-  - **Optimization & Fix**:
-    - **FastEmbed Low-Memory Encoding**: Restricted ONNX session to `threads=1` and `batch_size=8` with manual garbage collection. Peak memory during embedding dropped from +580 MB to **+2.4 MB**.
-    - **In-Process Background Worker**: Executed Celery task in a background daemon thread within FastAPI when `RUN_WORKER_IN_PROCESS=true` (default), eliminating the secondary Python process and sharing ONNX model memory. Total container memory is now **~265 MB** (well below the 512 MB limit).
-    - **Comprehensive Logging**: Added detailed logs at every step in `tasks.py` (`Extracted X pages`, `Chunked into Y chunks`, `Starting embedding generation`, `Successfully persisted Z chunks`).
+- **Task**: Fix Accidental Logouts, Google Sign-in Button Sizing, and Chat Document Selection
+  - **Accidental Logout Prevention**:
+    - Previously, if the backend was restarting (returning 502/503 or transient network errors), `AuthContext.initAuth()` and `client.js` caught any error and wiped `docrag_access_token`, logging the user out.
+    - Updated `AuthContext.jsx` and `client.js` to only clear authentication credentials when the backend explicitly responds with `401 Unauthorized`.
+  - **Google Login Button Sizing**:
+    - Google Identity Services (GSI) rejected `width="100%"` as an invalid numeric width, causing the button to shrink to its minimum 200px size.
+    - Updated `width="368"` and added `[&_iframe]:!w-full` in `LoginPage.jsx` and `RegisterPage.jsx` to render the button at full card width.
+  - **Chat Document Selection & Live Polling**:
+    - In `ChatPage.jsx`, `fetchDocuments()` was strictly querying `{ status: 'completed' }`, which omitted newly uploaded documents from `availableDocs` while they were being indexed.
+    - Removed the status filter so uploaded documents immediately populate the dropdown with an active `(Processing...)` badge.
+    - Added an automatic 2.5-second status poller that refreshes documents while any document is in `queued` or `processing`.
+    - Added user-friendly guidance in `handleSendMessage` if a question is submitted before indexing completes.
   - **Verification**:
     - Backend Pytest: 22/22 passed.
     - Frontend Vitest: 25/25 passed.
@@ -48,4 +52,4 @@
 - **Frontend Build**: Built cleanly with zero errors.
 
 ### Next Step
-- Push changes to GitHub `main`, trigger Render deployment, and verify complete document processing in Render logs.
+- Commit and push to GitHub `main` for automatic Vercel deployment.

@@ -44,10 +44,13 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return api(originalRequest);
         } catch (refreshErr) {
-          localStorage.removeItem('docrag_access_token');
-          localStorage.removeItem('docrag_refresh_token');
-          localStorage.removeItem('docrag_user');
-          window.location.href = '/login';
+          // Only clear and redirect if the refresh endpoint explicitly returned 401
+          if (refreshErr.response?.status === 401) {
+            localStorage.removeItem('docrag_access_token');
+            localStorage.removeItem('docrag_refresh_token');
+            localStorage.removeItem('docrag_user');
+            window.location.href = '/login';
+          }
           return Promise.reject(refreshErr);
         }
       } else {

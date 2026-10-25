@@ -11,17 +11,32 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('docrag_access_token');
+      const storedUser = localStorage.getItem('docrag_user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {}
+      }
       if (storedToken) {
         try {
           const profile = await authApi.getMe();
           setUser(profile);
+          localStorage.setItem('docrag_user', JSON.stringify(profile));
           setToken(storedToken);
         } catch (err) {
           console.error('Session restoration failed:', err);
-          localStorage.removeItem('docrag_access_token');
-          localStorage.removeItem('docrag_refresh_token');
-          setUser(null);
-          setToken(null);
+          // ONLY clear session if server explicitly returned 401 (unauthorized / invalid token)
+          // If server is temporarily restarting (502/503/Network Error), do NOT log out the user!
+          if (err.response?.status === 401) {
+            localStorage.removeItem('docrag_access_token');
+            localStorage.removeItem('docrag_refresh_token');
+            localStorage.removeItem('docrag_user');
+            setUser(null);
+            setToken(null);
+          } else {
+            // Keep existing token so user stays logged in across temporary server restarts
+            setToken(storedToken);
+          }
         }
       }
       setLoading(false);
@@ -34,6 +49,9 @@ export const AuthProvider = ({ children }) => {
     const data = await authApi.login(email, password);
     localStorage.setItem('docrag_access_token', data.access_token);
     localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    if (data.user) {
+      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+    }
     setToken(data.access_token);
     setUser(data.user);
     return data;
@@ -43,6 +61,9 @@ export const AuthProvider = ({ children }) => {
     const data = await authApi.register(email, password, fullName);
     localStorage.setItem('docrag_access_token', data.access_token);
     localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    if (data.user) {
+      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+    }
     setToken(data.access_token);
     setUser(data.user);
     return data;
@@ -52,6 +73,9 @@ export const AuthProvider = ({ children }) => {
     const data = await authApi.googleLogin(idToken);
     localStorage.setItem('docrag_access_token', data.access_token);
     localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    if (data.user) {
+      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+    }
     setToken(data.access_token);
     setUser(data.user);
     return data;

@@ -159,9 +159,26 @@ export default function ChatPage() {
     fetchDocuments();
   }, []);
 
+  // Poll for document status if any document is processing or if attachments are active
+  useEffect(() => {
+    const hasProcessing = availableDocs.some(
+      (d) => d.status === 'processing' || d.status === 'queued'
+    );
+    const hasUploadingAttach = attachments.some(
+      (a) => a.status === 'uploading'
+    );
+
+    if (hasProcessing || hasUploadingAttach) {
+      const interval = setInterval(() => {
+        fetchDocuments();
+      }, 2500);
+      return () => clearInterval(interval);
+    }
+  }, [availableDocs, attachments]);
+
   const fetchDocuments = async () => {
     try {
-      const data = await documentsApi.getDocuments({ status: 'completed', size: 100 });
+      const data = await documentsApi.getDocuments({ size: 100 });
       setAvailableDocs(data.items || []);
     } catch (err) {
       console.error('Failed to load documents:', err);
@@ -425,6 +442,23 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
     };
 
+    // Check if any selected document is still processing
+    const processingSelected = availableDocs.filter(
+      (d) => selectedDocIds.includes(d.id) && (d.status === 'processing' || d.status === 'queued')
+    );
+    if (processingSelected.length > 0) {
+      const docName = processingSelected[0].title || processingSelected[0].filename;
+      const warningMsg = {
+        id: 'warn-' + Date.now(),
+        role: 'assistant',
+        content: `**${docName}** is currently being processed and indexed. Please wait a few moments for indexing to finish before asking questions about it.`,
+        citations_json: [],
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg, warningMsg]);
+      return;
+    }
+
     setMessages((prev) => [...prev, userMsg]);
     setIsSending(true);
 
@@ -668,14 +702,16 @@ export default function ChatPage() {
         <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
           {availableDocs.length === 0 ? (
             <div className="p-3 text-center text-xs text-[#8e8e8e] font-sans">
-              <p>No indexed documents yet.</p>
+              <p>No documents uploaded yet.</p>
               <p className="text-[11px] text-[#666666] mt-1">
-                Upload documents via Documents tab or attach files above.
+                Upload documents via the + button or the Documents page.
               </p>
             </div>
           ) : (
             availableDocs.map((doc) => {
               const isSelected = selectedDocIds.includes(doc.id);
+              const isProcessing = doc.status === 'processing' || doc.status === 'queued';
+              const isFailed = doc.status === 'failed';
               return (
                 <div
                   key={doc.id}
@@ -689,7 +725,19 @@ export default function ChatPage() {
                       : 'hover:bg-[#222222] text-[#a0a0a0]'
                   }`}
                 >
-                  <span className="truncate pr-2 font-sans">{doc.title || doc.filename}</span>
+                  <div className="flex items-center gap-1.5 truncate pr-2 font-sans min-w-0">
+                    <span className="truncate">{doc.title || doc.filename}</span>
+                    {isProcessing && (
+                      <span className="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">
+                        Processing...
+                      </span>
+                    )}
+                    {isFailed && (
+                      <span className="text-[10px] text-rose-400 bg-rose-400/10 px-1.5 py-0.5 rounded shrink-0">
+                        Failed
+                      </span>
+                    )}
+                  </div>
                   {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
                 </div>
               );

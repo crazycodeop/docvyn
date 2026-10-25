@@ -139,14 +139,14 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="flex justify-center w-full [&>div]:w-full overflow-hidden rounded-xl">
+          <div className="flex justify-center w-full [&>div]:w-full [&_iframe]:!w-full overflow-hidden rounded-xl">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google sign-up failed. Please try again.')}
               theme="filled_black"
               shape="rectangular"
               size="large"
-              width="100%"
+              width="368"
               text="signup_with"
             />
           </div>
