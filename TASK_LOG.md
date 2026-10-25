@@ -74,3 +74,20 @@
   - `backend/app/services/rag_service.py`: Added fast-path greeting detection (`_is_conversational_or_greeting`) that collapses character repetitions and matches conversational phrases. Generates a warm, natural greeting via Groq LLM with deterministic fallbacks, returning 0 citations.
   - `backend/tests/test_rag.py`: Added automated test suite verifying greetings across variations.
 - **Verification**: 23/23 pytest backend tests passed. Pushed to `main` (`9bbd50d`).
+
+## Full Fix Suite: Extraction, Ephemeral Download Fallback, Google Button, Header Cleanup
+- **Status**: Completed & Verified
+- **Changes**:
+  1. **Scanned / Receipt Text Extraction**:
+     - Added `opencv-python-headless>=4.8.0` in `requirements.txt` to ensure RapidOCR loads without missing GUI libraries on Linux.
+     - Added AcroForm widget extraction in `extraction_service.py` to extract text from government form fields and JasperReports.
+     - Added pypdf fallback before raising `EmptyDocumentError`.
+  2. **Resilient Document Download**:
+     - Added `export_document_chunks_to_pdf` in `pdf_export_service.py` and connected it in `document_service.py`: if raw files on Render's ephemeral disk were wiped by a container restart, it reconstructs the document from database chunks, ensuring 100% download reliability.
+  3. **Playground Header Cleanup**:
+     - Removed the rename edit button next to the Playground title in `ChatPage.jsx` (users rename via chat options).
+  4. **Google Sign-In Button Clipping**:
+     - Fixed `LoginPage.jsx` and `RegisterPage.jsx` container width (`width="350"` without `overflow-hidden` or `!w-full`), stopping right-edge logo cutoffs.
+  5. **Natural Greetings without AI-Style Hyphens**:
+     - Added prompt rules and post-processing in `rag_service.py` to prevent em-dashes (`—`) or awkward hyphens in greeting messages.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`bb7a80a`).
