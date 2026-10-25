@@ -86,9 +86,10 @@
      - Added `export_document_chunks_to_pdf` in `pdf_export_service.py` and connected it in `document_service.py`: if raw files on Render's ephemeral disk were wiped by a container restart, it reconstructs the document from database chunks, ensuring 100% download reliability.
   3. **Playground Header Cleanup**:
      - Removed the rename edit button next to the Playground title in `ChatPage.jsx` (users rename via chat options).
-  4. **Google Sign-In Button Clipping**:
-     - Fixed `LoginPage.jsx` and `RegisterPage.jsx` container width (`width="350"` without `overflow-hidden` or `!w-full`), stopping right-edge logo cutoffs.
+  4. **Google Sign-In Button Dynamic Width & Alignment**:
+     - Measured parent container width via `useLayoutEffect` and `useRef` clamped to Google GSI's [200, 400] range in `LoginPage.jsx` and `RegisterPage.jsx`.
+     - Google button now matches the exact pixel width of the input fields and Sign In button on any mobile screen width (~280px) and desktop (~368px) with zero overflow or right-edge clipping.
   5. **Natural Greetings without AI-Style Hyphens**:
      - Converted standard greetings ("hi", "hello", "hiiii", "hey") to return an immediate, natural human greeting: `"Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."`
      - Added strict regex replacement for any em-dashes (`—`), en-dashes (`–`), or hyphens (`-`) used as punctuation in conversational responses.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`cf663a7`).
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`eea8d86`).
