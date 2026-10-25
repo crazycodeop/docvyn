@@ -66,3 +66,11 @@
   - `backend/app/services/embedding_service.py`: Converted `_shared_local_model` and `_shared_gemini_client` to class-level singletons so the FastEmbed model is loaded exactly once in the container lifetime.
   - `backend/app/services/embedding_service.py` & `backend/app/workers/tasks.py`: Added `ctypes.CDLL('libc.so.6').malloc_trim(0)` after batch vectorization and in the task's `finally` block to return freed memory pages directly to the OS kernel.
 - **Verification**: 22/22 pytest backend tests passed. Pushed to `main` (`c2e21ae`) for auto-deploy on Render.
+
+## Conversational Greeting Handling (hi, hello, hiiii)
+- **Status**: Completed & Verified
+- **Issue**: Starting a conversation with casual greetings ("hi", "hello", "hiiii", "who are you") returned "The provided documents do not contain sufficient information to answer this question."
+- **Changes**:
+  - `backend/app/services/rag_service.py`: Added fast-path greeting detection (`_is_conversational_or_greeting`) that collapses character repetitions and matches conversational phrases. Generates a warm, natural greeting via Groq LLM with deterministic fallbacks, returning 0 citations.
+  - `backend/tests/test_rag.py`: Added automated test suite verifying greetings across variations.
+- **Verification**: 23/23 pytest backend tests passed. Pushed to `main` (`9bbd50d`).
