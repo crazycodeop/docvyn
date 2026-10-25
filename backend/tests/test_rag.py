@@ -87,3 +87,19 @@ async def test_rag_query_with_citations(client: AsyncClient, db_session: AsyncSe
     assert stats_data["total_messages"] >= 2
     assert "daily_ingestion_history" in stats_data
     assert len(stats_data["daily_ingestion_history"]) == 14
+
+
+@pytest.mark.asyncio
+async def test_greeting_conversational_response(client: AsyncClient, auth_headers: dict):
+    """Verifies that greetings like 'hi', 'hello', 'hiiii' receive warm responses without 'No content found'."""
+    for greeting in ["hi", "hiiii", "Hello!", "Hey there"]:
+        resp = await client.post(
+            "/api/v1/chat/query",
+            json={"question": greeting},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "answer" in data
+        assert "not contain sufficient information" not in data["answer"].lower()
+        assert len(data["citations"]) == 0

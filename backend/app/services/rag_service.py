@@ -193,6 +193,93 @@ CRITICAL INSTRUCTIONS:
 </DOCUMENT_CONTEXT>"""
         return system_prompt, context_str
 
+    @staticmethod
+    def _is_conversational_or_greeting(query: str) -> bool:
+        """Detects if a user message is purely a greeting, pleasantry, or general conversational query."""
+        if not query:
+            return False
+        clean = query.strip().lower()
+        clean = re.sub(r"[?!.,!]+$", "", clean).strip()
+
+        # Collapse repeated characters (e.g., 'hiiii' -> 'hii', 'hellooo' -> 'hello')
+        clean_collapsed = re.sub(r"(.)\1{2,}", r"\1\1", clean)
+
+        # Standalone short greetings
+        standalone_greetings = {
+            "hi", "hii", "hiii", "hello", "helloo", "hey", "heyy", "heyyy", "hiya",
+            "howdy", "hola", "namaste", "sup", "yo", "greetings", "hai",
+            "good morning", "good afternoon", "good evening", "good day", "good night",
+            "how are you", "how are you doing", "how r u", "how do you do",
+            "what's up", "whats up", "what is docvyn", "who are you",
+            "what can you do", "help", "help me",
+            "thank you", "thanks", "thanks a lot", "thx", "bye", "goodbye"
+        }
+        if clean in standalone_greetings or clean_collapsed in standalone_greetings:
+            return True
+
+        # If it's short (under 6 words) and matches greeting patterns
+        words = clean.split()
+        if len(words) <= 5:
+            patterns = [
+                r"^(hi+|hey+|hello+|hiya+|howdy|yo)\b",
+                r"^good\s+(morning|afternoon|evening|night|day)\b",
+                r"^(how\s+are\s+you|how\s+r\s+u|how\s+do\s+you\s+do|what'?s\s+up)\b",
+                r"^(who\s+are\s+you|what\s+is\s+docvyn|what\s+can\s+you\s+do)\b",
+                r"^(thank\s+you|thanks|bye|goodbye)\b",
+            ]
+            if any(re.search(p, clean) for p in patterns):
+                inquiry_words = {"document", "file", "pdf", "table", "summary", "summarize", "page", "explain", "contract", "report"}
+                if not any(w in words for w in inquiry_words):
+                    return True
+
+        return False
+
+    def _generate_conversational_response(
+        self,
+        question: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> str:
+        """Generates a warm, intelligent conversational greeting for the user."""
+        system_prompt = (
+            "You are docvyn, a modern and intelligent enterprise document assistant. "
+            "Respond warmly, politely, and concisely (1 to 2 sentences) to the user's greeting or question. "
+            "Welcome them, let them know you are ready to help them explore, search, or summarize their documents, "
+            "and invite them to ask a question or upload files."
+        )
+
+        if self.groq_client and settings.GROQ_API_KEY:
+            try:
+                messages = [{"role": "system", "content": system_prompt}]
+                if conversation_history:
+                    for msg in conversation_history[-4:]:
+                        role = "user" if msg.get("role") == "user" else "assistant"
+                        messages.append({"role": role, "content": msg.get("content", "")})
+                messages.append({"role": "user", "content": question})
+
+                chat_completion = self.groq_client.chat.completions.create(
+                    model=settings.GROQ_MODEL,
+                    messages=messages,
+                    temperature=0.4,
+                    max_tokens=150,
+                )
+                answer_text = chat_completion.choices[0].message.content or ""
+                if answer_text.strip():
+                    return answer_text.strip()
+            except Exception as e:
+                logger.warning(f"Groq conversational response failed: {e}")
+
+        clean = question.strip().lower()
+        if "who are you" in clean or "what is docvyn" in clean:
+            return "I am **docvyn**, your AI-powered document intelligence assistant. You can upload PDFs, documents, or images, and ask me to search, explain, or extract information with grounded citations."
+        if "what can you do" in clean or "help" in clean:
+            return "I can help you extract text from PDFs and scanned documents, perform grounded searches with page citations, summarize complex reports, and answer questions based on your uploaded files. How can I help you today?"
+        if "thank" in clean:
+            return "You're very welcome! Let me know if you need help with anything else in your documents."
+        if "bye" in clean:
+            return "Goodbye! Feel free to come back whenever you need help analyzing your documents."
+
+        return "Hello! I am **docvyn**, your document intelligence assistant. How can I help you today? Feel free to ask questions about your documents or attach new files to explore."
+
     async def answer_query(
         self,
         db: AsyncSession,
@@ -204,6 +291,14 @@ CRITICAL INSTRUCTIONS:
         similarity_threshold: float = 0.25,
     ) -> Tuple[str, List[Citation]]:
         """Runs the complete RAG pipeline: retrieval -> prompt construction -> generation -> citation extraction."""
+        # 1. Fast path for conversational greetings/chit-chat (hi, hello, hiiii, etc.)
+        if self._is_conversational_or_greeting(question):
+            greeting_answer = self._generate_conversational_response(
+                question=question,
+                conversation_history=conversation_history,
+            )
+            return greeting_answer, []
+
         retrieved = await self.retrieve_chunks(
             db=db,
             user_id=user_id,
