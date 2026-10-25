@@ -58,3 +58,11 @@
     - Citations: Converted vertical card pile into horizontal swipeable snap carousel.
     - Composer: Scoped document chip moved above input row on mobile to provide 100% full-width input for textarea without placeholder wrapping.
 - **Verification**: 25/25 Vitest frontend tests passed, frontend production build passed, 22/22 pytest backend tests passed. Pushed to `main`.
+
+## Backend Memory Optimization (Class-level FastEmbed Singleton + Glibc Malloc Trim)
+- **Status**: Completed & Verified
+- **Issue**: Container crashed with 502 at 85% ("Embedding") when multiple documents were indexed because `EmbeddingService._local_model` was an instance attribute, instantiating duplicate ONNX sessions on every background task and RAG query.
+- **Changes**:
+  - `backend/app/services/embedding_service.py`: Converted `_shared_local_model` and `_shared_gemini_client` to class-level singletons so the FastEmbed model is loaded exactly once in the container lifetime.
+  - `backend/app/services/embedding_service.py` & `backend/app/workers/tasks.py`: Added `ctypes.CDLL('libc.so.6').malloc_trim(0)` after batch vectorization and in the task's `finally` block to return freed memory pages directly to the OS kernel.
+- **Verification**: 22/22 pytest backend tests passed. Pushed to `main` (`c2e21ae`) for auto-deploy on Render.
