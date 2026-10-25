@@ -244,7 +244,8 @@ CRITICAL INSTRUCTIONS:
             "You are docvyn, a modern and intelligent enterprise document assistant. "
             "Respond warmly, politely, and concisely (1 to 2 sentences) to the user's greeting or question. "
             "Welcome them, let them know you are ready to help them explore, search, or summarize their documents, "
-            "and invite them to ask a question or upload files."
+            "and invite them to ask a question or upload files. "
+            "IMPORTANT: Do not use em-dashes (—) or hyphens as punctuation. Use clean, natural sentences with commas and periods."
         )
 
         if self.groq_client and settings.GROQ_API_KEY:
@@ -263,6 +264,8 @@ CRITICAL INSTRUCTIONS:
                     max_tokens=150,
                 )
                 answer_text = chat_completion.choices[0].message.content or ""
+                # Strip out any em-dashes or awkward artificial hyphens
+                answer_text = answer_text.replace("—", ", ").replace(" – ", ", ")
                 if answer_text.strip():
                     return answer_text.strip()
             except Exception as e:

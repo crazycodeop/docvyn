@@ -386,3 +386,68 @@ class PDFExportService:
         except Exception:
             return None
         return None
+
+    @classmethod
+    def export_document_chunks_to_pdf(
+        cls,
+        document_title: str,
+        chunks: List[Any],
+    ) -> io.BytesIO:
+        """Compiles indexed document chunks into a clean, readable PDF if raw file was evicted from ephemeral disk."""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            leftMargin=40,
+            rightMargin=40,
+            topMargin=45,
+            bottomMargin=45,
+        )
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "DocTitle",
+            parent=styles["Heading1"],
+            fontName="Helvetica-Bold",
+            fontSize=16,
+            leading=20,
+            textColor=colors.HexColor("#0f172a"),
+            spaceAfter=10,
+        )
+        body_style = ParagraphStyle(
+            "DocBody",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=9.5,
+            leading=14,
+            textColor=colors.HexColor("#334155"),
+            spaceAfter=8,
+        )
+        meta_style = ParagraphStyle(
+            "DocMeta",
+            fontName="Helvetica",
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor("#64748b"),
+            spaceAfter=12,
+        )
+
+        story = [
+            Paragraph(html.escape(document_title), title_style),
+            Paragraph(f"Exported from docvyn document archive • {len(chunks)} sections", meta_style),
+            HRFlowable(width="100%", thickness=1, color=colors.HexColor("#e2e8f0"), spaceAfter=14),
+        ]
+
+        for chunk in chunks:
+            content = getattr(chunk, "content", "") or ""
+            page_num = getattr(chunk, "page_number", None)
+            if page_num:
+                story.append(Paragraph(f"<b>[Page {page_num}]</b>", meta_style))
+            for line in content.split("\n"):
+                if line.strip():
+                    story.append(Paragraph(cls._clean_markdown_text(line), body_style))
+            story.append(Spacer(1, 8))
+
+        doc.build(story)
+        buffer.seek(0)
+        return buffer

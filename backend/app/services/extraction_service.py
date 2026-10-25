@@ -204,16 +204,25 @@ class ExtractionService:
             for page_index in range(len(doc)):
                 page = doc[page_index]
                 page_text = page.get_text("text") or ""
+
+                # Extract AcroForm widget field values (common in government receipts and online forms)
+                try:
+                    for widget in page.widgets():
+                        if widget.field_value:
+                            page_text += f"\n{widget.field_value}"
+                except Exception:
+                    pass
+
                 cleaned = cls._clean_text(page_text)
 
-                # Heuristic: if page text is very short (< 40 characters), check if it's a scanned page
+                # Heuristic: if page text is very short (< 50 characters), check if it's a scanned/raster page
                 extraction_method = "digital_pdf"
                 ocr_confidence = 1.0
                 is_scanned = False
                 final_text = cleaned
 
-                # If digital text density is low and page has drawings/images, perform OCR fallback
-                if len(cleaned) < 40 and HAS_RAPID_OCR:
+                # If digital text density is low, perform OCR fallback
+                if len(cleaned) < 50 and HAS_RAPID_OCR:
                     try:
                         # Render page at 200 DPI for high-accuracy OCR
                         pix = page.get_pixmap(dpi=200)

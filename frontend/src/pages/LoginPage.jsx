@@ -114,14 +114,14 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex justify-center w-full [&>div]:w-full [&_iframe]:!w-full overflow-hidden rounded-xl">
+          <div className="flex justify-center w-full min-h-[44px]">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google sign-in failed. Please try again.')}
               theme="filled_black"
               shape="rectangular"
               size="large"
-              width="368"
+              width="350"
               text="signin_with"
             />
           </div>

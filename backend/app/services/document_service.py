@@ -191,13 +191,27 @@ class DocumentService:
         return True
 
     async def get_document_bytes(self, db: AsyncSession, document_id: str, user_id: str) -> Tuple[bytes, Document]:
-        """Retrieves raw document bytes from storage for preview or secure download."""
+        """Retrieves raw document bytes from storage for preview or secure download, with chunk fallback if ephemeral disk was reset."""
         doc = await self.get_document(db, document_id, user_id)
         if not doc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
 
-        content = self.storage.load(doc.file_path)
-        return content, doc
+        try:
+            content = self.storage.load(doc.file_path)
+            return content, doc
+        except Exception as e:
+            logger.warning(f"Storage load failed for {doc.id} ({e}). Reconstructing from database chunks...")
+            stmt = (
+                select(DocumentChunk)
+                .where(DocumentChunk.document_id == doc.id)
+                .order_by(DocumentChunk.chunk_index.asc())
+            )
+            chunks = list((await db.execute(stmt)).scalars().all())
+            if chunks:
+                from app.services.pdf_export_service import PDFExportService
+                reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(doc.title or doc.filename, chunks)
+                return reconstructed_pdf.getvalue(), doc
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
 
 
 doc_service = DocumentService()

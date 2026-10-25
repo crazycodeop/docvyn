@@ -803,15 +803,6 @@ export default function ChatPage() {
             <span className="font-medium text-[13px] text-[#ededed] truncate">
               {activeConversation?.title || 'Playground'}
             </span>
-            {activeConvId && (
-              <button
-                onClick={handleOpenRename}
-                className="p-1 rounded text-[#707070] hover:text-[#f0f0f0] transition cursor-pointer"
-                title="Rename conversation"
-              >
-                <Edit2 className="w-3 h-3" />
-              </button>
-            )}
           </div>
 
           {/* Right Controls: Find, Share, PDF Export & Document Scope Filter */}
