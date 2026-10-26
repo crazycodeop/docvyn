@@ -1353,11 +1353,11 @@ export default function ChatPage() {
                           <Bookmark className="w-3.5 h-3.5 text-white/80" />
                           <span>Sources ({msg.citations_json.length})</span>
                         </p>
-                        <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 snap-x scrollbar-thin">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {msg.citations_json.map((citation, citIdx) => (
                             <div
                               key={citIdx}
-                              className="min-w-[260px] sm:min-w-0 snap-start shrink-0 sm:shrink bg-[#1a1a1a] border border-[#282828] hover:border-[#383838] p-3 rounded-xl transition shadow-sm group select-text"
+                              className="w-full bg-[#1a1a1a] border border-[#282828] hover:border-[#383838] p-3 rounded-xl transition shadow-sm group select-text"
                             >
                               <div className="flex items-center justify-between gap-2 select-none">
                                 <span className="text-[10px] font-semibold tracking-wider text-white bg-[#262626] px-2 py-0.5 rounded border border-[#333333]">

@@ -1,9 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
@@ -13,10 +17,22 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Lock body scroll while modal is active
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto animate-fade-in">
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] overflow-y-auto animate-fade-in select-none">
       <div className="flex min-h-screen items-center justify-center p-4 text-center">
         {/* Backdrop */}
         <div
@@ -26,7 +42,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
 
         {/* Modal content */}
         <div
-          className={`relative w-full ${maxWidth} transform rounded-2xl bg-[#1c1c1c] p-6 text-left shadow-2xl transition-all border border-[#2e2e2e] z-10 text-white animate-slide-up`}
+          className={`relative w-full ${maxWidth} transform rounded-2xl bg-[#1c1c1c] p-6 text-left shadow-2xl transition-all border border-[#2e2e2e] z-10 text-white animate-slide-up select-text`}
         >
           <div className="flex items-center justify-between pb-4 border-b border-[#282828]">
             <h3 className="font-heading text-base sm:text-lg font-semibold text-white tracking-tight">{title}</h3>
@@ -42,6 +58,8 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
 
 Modal.propTypes = {

@@ -92,7 +92,14 @@
   5. **Natural Greetings without AI-Style Hyphens**:
      - Converted standard greetings ("hi", "hello", "hiiii", "hey") to return an immediate, natural human greeting: `"Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."`
      - Added strict regex replacement for any em-dashes (`—`), en-dashes (`–`), or hyphens (`-`) used as punctuation in conversational responses.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`eea8d86`).
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`6dc7900`).
+
+## [2026-10-26] - Fix Modal Viewport Portaling & Vertical Responsive Citation Grid
+- **Files Modified**:
+  - `frontend/src/components/common/Modal.jsx`: Portaled modal tree directly to `document.body` via `createPortal` with `z-[100]` and body scroll-locking, preventing any ancestor CSS `transform` / mobile drawer width from trapping modal windows inside the sidebar.
+  - `frontend/src/components/layout/Sidebar.jsx`: Moved modal declarations (`ArchivedModal`, rename `Modal`, delete/alert `ConfirmationModal`) outside of the navigation JSX variable to the root component tree.
+  - `frontend/src/pages/ChatPage.jsx`: Replaced mobile horizontal-scrolling citations container (`overflow-x-auto flex snap-x`) with responsive vertical grid (`grid grid-cols-1 sm:grid-cols-2 gap-2.5`), ensuring all source citations are immediately visible without horizontal scrolling.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded. Pushed to `main` (`eea8d86`).
 
 ## [2026-10-26] - Mobile UI Polish, Robust Academic PDF Fallbacks, Demo User Seed & Document Preview Reader
 - **Files Modified**:
@@ -104,4 +111,11 @@
   - `frontend/src/pages/DashboardPage.jsx`: Added responsive card list for recent documents on mobile screens.
   - `frontend/src/pages/ChatPage.jsx`: Replaced rectangular scoped banner on mobile with compact inline pill chip.
   - `frontend/src/pages/LoginPage.jsx` & `frontend/src/pages/RegisterPage.jsx`: Refined dynamic Google button sizing using `clientWidth` and `overflow-hidden` container to avoid mobile clipping.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`6dc7900`).
+
+## [2026-10-26] - Fix Modal Viewport Portaling & Vertical Responsive Citation Grid
+- **Files Modified**:
+  - `frontend/src/components/common/Modal.jsx`: Portaled modal tree directly to `document.body` via `createPortal` with `z-[100]` and body scroll-locking, preventing any ancestor CSS `transform` / mobile drawer width from trapping modal windows inside the sidebar.
+  - `frontend/src/components/layout/Sidebar.jsx`: Moved modal declarations (`ArchivedModal`, rename `Modal`, delete/alert `ConfirmationModal`) outside of the navigation JSX variable to the root component tree.
+  - `frontend/src/pages/ChatPage.jsx`: Replaced mobile horizontal-scrolling citations container (`overflow-x-auto flex snap-x`) with responsive vertical grid (`grid grid-cols-1 sm:grid-cols-2 gap-2.5`), ensuring all source citations are immediately visible without horizontal scrolling.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded.

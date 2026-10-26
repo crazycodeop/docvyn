@@ -529,8 +529,38 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile = () => {}
           </div>
         </div>
       )}
+    </div>
+  );
 
-      {/* Archived Conversations Modal */}
+  return (
+    <>
+      {/* Desktop Persistent / Retractable Sidebar */}
+      <aside
+        className={`shrink-0 hidden md:flex flex-col bg-[#181817] h-full overflow-hidden transition-all duration-200 ease-in-out ${
+          isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-60 opacity-100'
+        }`}
+      >
+        <div className="w-60 h-full flex flex-col justify-between">
+          {content}
+        </div>
+      </aside>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-fade-in">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={onCloseMobile}
+          />
+          {/* Drawer content */}
+          <div className="relative w-72 max-w-[80vw] bg-[#181817] h-full shadow-2xl border-r border-[#262626] z-10 animate-slide-up">
+            {content}
+          </div>
+        </div>
+      )}
+
+      {/* Global Modals (Portaled to document.body, free from any ancestor transform or drawer width) */}
       {showArchivedModal && (
         <ArchivedModal
           isOpen={showArchivedModal}
@@ -590,36 +620,6 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile = () => {}
           message={alertInfo.message}
           type="error"
         />
-      )}
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop Persistent / Retractable Sidebar */}
-      <aside
-        className={`shrink-0 hidden md:flex flex-col bg-[#181817] h-full overflow-hidden transition-all duration-200 ease-in-out ${
-          isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-60 opacity-100'
-        }`}
-      >
-        <div className="w-60 h-full flex flex-col justify-between">
-          {content}
-        </div>
-      </aside>
-
-      {/* Mobile Drawer Overlay */}
-      {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex animate-fade-in">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={onCloseMobile}
-          />
-          {/* Drawer content */}
-          <div className="relative w-72 max-w-[80vw] bg-[#181817] h-full shadow-2xl border-r border-[#262626] z-10 animate-slide-up">
-            {content}
-          </div>
-        </div>
       )}
     </>
   );
