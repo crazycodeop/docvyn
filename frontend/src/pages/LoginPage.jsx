@@ -23,9 +23,9 @@ export default function LoginPage() {
   useLayoutEffect(() => {
     const updateWidth = () => {
       if (googleContainerRef.current) {
-        const w = googleContainerRef.current.offsetWidth;
+        const w = googleContainerRef.current.clientWidth;
         if (w > 0) {
-          setGoogleWidth(Math.min(400, Math.max(200, Math.floor(w))));
+          setGoogleWidth(Math.min(380, Math.max(200, Math.floor(w))));
         }
       }
     };
@@ -130,7 +130,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div ref={googleContainerRef} className="flex justify-center w-full min-h-[44px]">
+          <div ref={googleContainerRef} className="w-full flex justify-center items-center min-h-[44px] overflow-hidden rounded-xl">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError('Google sign-in failed. Please try again.')}

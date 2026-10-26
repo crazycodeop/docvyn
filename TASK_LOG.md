@@ -93,3 +93,15 @@
      - Converted standard greetings ("hi", "hello", "hiiii", "hey") to return an immediate, natural human greeting: `"Hello! How can I help you today? Feel free to ask questions about your documents or upload a file to get started."`
      - Added strict regex replacement for any em-dashes (`—`), en-dashes (`–`), or hyphens (`-`) used as punctuation in conversational responses.
 - **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`eea8d86`).
+
+## [2026-10-26] - Mobile UI Polish, Robust Academic PDF Fallbacks, Demo User Seed & Document Preview Reader
+- **Files Modified**:
+  - `backend/app/main.py`: Added automatic demo user seed/sync (`demo@cortex.ai` / `demo123456`) in application startup lifespan.
+  - `backend/app/services/extraction_service.py`: Multi-stage resilient extraction pipeline for research papers with LaTeX/Type 3 bitmapped fonts (PyMuPDF -> text blocks/widgets -> pypdf stream fallback -> 150 DPI RapidOCR pass).
+  - `backend/app/api/v1/endpoints/documents.py`: Added `GET /api/v1/documents/{document_id}/chunks` for document text review.
+  - `frontend/src/api/documents.js`: Added `getDocumentChunks` helper.
+  - `frontend/src/pages/DocumentsPage.jsx`: Replaced squeezed table on mobile with sleek cards (`sm:hidden`); made filter tabs scrollable without text wrap (`overflow-x-auto whitespace-nowrap`); redesigned document preview modal with tabbed "File Preview" + "Extracted Text" reader and mobile direct open/download action bar.
+  - `frontend/src/pages/DashboardPage.jsx`: Added responsive card list for recent documents on mobile screens.
+  - `frontend/src/pages/ChatPage.jsx`: Replaced rectangular scoped banner on mobile with compact inline pill chip.
+  - `frontend/src/pages/LoginPage.jsx` & `frontend/src/pages/RegisterPage.jsx`: Refined dynamic Google button sizing using `clientWidth` and `overflow-hidden` container to avoid mobile clipping.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed.

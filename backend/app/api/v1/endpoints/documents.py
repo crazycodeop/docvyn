@@ -129,3 +129,38 @@ async def download_document(
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
+
+
+@router.get("/{document_id}/chunks")
+async def get_document_chunks(
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Retrieves parsed text chunks for inline document review and mobile reader mode."""
+    from sqlalchemy import select
+    from app.models.chunk import DocumentChunk
+
+    doc = await doc_service.get_document(db=db, document_id=document_id, user_id=current_user.id)
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    stmt = select(DocumentChunk).where(DocumentChunk.document_id == document_id).order_by(DocumentChunk.chunk_index)
+    res = await db.execute(stmt)
+    chunks = res.scalars().all()
+
+    return {
+        "document_id": doc.id,
+        "title": doc.title,
+        "filename": doc.filename,
+        "page_count": doc.page_count,
+        "chunks": [
+            {
+                "id": c.id,
+                "chunk_index": c.chunk_index,
+                "page_number": c.page_number,
+                "content": c.content,
+            }
+            for c in chunks
+        ],
+    }

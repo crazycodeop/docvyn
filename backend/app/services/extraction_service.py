@@ -183,12 +183,88 @@ class ExtractionService:
 
     @classmethod
     def _extract_pdf(cls, file_bytes: bytes) -> List[ExtractedPage]:
+        pages: List[ExtractedPage] = []
+        errors = []
+
+        # Strategy 1: PyMuPDF (fitz)
         if HAS_PYMUPDF:
-            return cls._extract_pdf_fitz(file_bytes)
-        elif HAS_PYPDF:
-            return cls._extract_pdf_pypdf(file_bytes)
-        else:
+            try:
+                pages = cls._extract_pdf_fitz(file_bytes)
+                if pages and sum(len(p.text.strip()) for p in pages) > 0:
+                    return pages
+            except EmptyDocumentError:
+                logger.info("PyMuPDF found no text, trying pypdf fallback...")
+            except Exception as e:
+                logger.warning(f"PyMuPDF extraction failed: {e}, trying pypdf fallback...")
+                errors.append(f"PyMuPDF: {e}")
+
+        # Strategy 2: pypdf fallback
+        if HAS_PYPDF:
+            try:
+                pages = cls._extract_pdf_pypdf(file_bytes)
+                if pages and sum(len(p.text.strip()) for p in pages) > 0:
+                    return pages
+            except EmptyDocumentError:
+                logger.info("pypdf found no text, attempting OCR fallback...")
+            except Exception as e:
+                logger.warning(f"pypdf extraction failed: {e}")
+                errors.append(f"pypdf: {e}")
+
+        # Strategy 3: Dedicated OCR pass across all pages (e.g. scanned research papers / LaTeX bitmapped fonts)
+        if HAS_PYMUPDF and HAS_RAPID_OCR:
+            try:
+                logger.info("Attempting full OCR pass across PDF pages...")
+                pages = cls._extract_pdf_ocr_fallback(file_bytes)
+                if pages and sum(len(p.text.strip()) for p in pages) > 0:
+                    return pages
+            except Exception as e:
+                logger.warning(f"Full OCR pass failed: {e}")
+                errors.append(f"OCR: {e}")
+
+        if not HAS_PYMUPDF and not HAS_PYPDF:
             raise RuntimeError("Neither PyMuPDF nor pypdf is installed for PDF extraction.")
+
+        raise EmptyDocumentError("The PDF document does not contain any readable text or is scanned without OCR.")
+
+    @classmethod
+    def _extract_pdf_ocr_fallback(cls, file_bytes: bytes) -> List[ExtractedPage]:
+        """Performs full page-by-page OCR when digital font extraction yields no text."""
+        try:
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+        except Exception as e:
+            raise CorruptFileError(f"Failed to open PDF document for OCR: {e}")
+
+        pages: List[ExtractedPage] = []
+        total_text_length = 0
+        try:
+            for page_index in range(len(doc)):
+                page = doc[page_index]
+                pix = page.get_pixmap(dpi=150)
+                pix_bytes = pix.tobytes("png")
+                ocr_text, ocr_conf = cls._run_ocr_on_bytes(pix_bytes)
+                cleaned = cls._clean_text(ocr_text)
+                total_text_length += len(cleaned)
+                pages.append(
+                    ExtractedPage(
+                        page_number=page_index + 1,
+                        text=cleaned,
+                        metadata={
+                            "page_width": page.rect.width,
+                            "page_height": page.rect.height,
+                            "char_count": len(cleaned),
+                            "extraction_method": "ocr_pdf",
+                            "ocr_confidence": ocr_conf,
+                            "is_scanned": True,
+                        },
+                    )
+                )
+        finally:
+            doc.close()
+
+        if total_text_length == 0:
+            raise EmptyDocumentError("OCR found no readable text in the PDF document.")
+
+        return pages
 
     @classmethod
     def _extract_pdf_fitz(cls, file_bytes: bytes) -> List[ExtractedPage]:
@@ -196,6 +272,12 @@ class ExtractionService:
             doc = fitz.open(stream=file_bytes, filetype="pdf")
         except Exception as e:
             raise CorruptFileError(f"Failed to open PDF document: {e}")
+
+        if doc.is_encrypted:
+            try:
+                doc.authenticate("")
+            except Exception:
+                pass
 
         pages: List[ExtractedPage] = []
         total_text_length = 0
@@ -205,7 +287,19 @@ class ExtractionService:
                 page = doc[page_index]
                 page_text = page.get_text("text") or ""
 
-                # Extract AcroForm widget field values (common in government receipts and online forms)
+                # If text is sparse, try extracting blocks (handles multi-column research papers)
+                if len(page_text.strip()) < 50:
+                    try:
+                        blocks = page.get_text("blocks")
+                        block_text = "\n".join(
+                            b[4] for b in blocks if len(b) > 4 and isinstance(b[4], str) and b[4].strip()
+                        )
+                        if len(block_text.strip()) > len(page_text.strip()):
+                            page_text = block_text
+                    except Exception:
+                        pass
+
+                # Extract AcroForm widget field values
                 try:
                     for widget in page.widgets():
                         if widget.field_value:
@@ -215,7 +309,6 @@ class ExtractionService:
 
                 cleaned = cls._clean_text(page_text)
 
-                # Heuristic: if page text is very short (< 50 characters), check if it's a scanned/raster page
                 extraction_method = "digital_pdf"
                 ocr_confidence = 1.0
                 is_scanned = False
@@ -224,12 +317,10 @@ class ExtractionService:
                 # If digital text density is low, perform OCR fallback
                 if len(cleaned) < 50 and HAS_RAPID_OCR:
                     try:
-                        # Render page at 200 DPI for high-accuracy OCR
-                        pix = page.get_pixmap(dpi=200)
+                        pix = page.get_pixmap(dpi=150)
                         pix_bytes = pix.tobytes("png")
                         ocr_text, ocr_conf = cls._run_ocr_on_bytes(pix_bytes)
 
-                        # If OCR yields more substantial text, use OCR result
                         if len(ocr_text) > len(cleaned):
                             final_text = ocr_text
                             extraction_method = "ocr_pdf"
@@ -270,6 +361,12 @@ class ExtractionService:
             reader = pypdf.PdfReader(io.BytesIO(file_bytes))
         except Exception as e:
             raise CorruptFileError(f"Failed to open PDF document with pypdf: {e}")
+
+        if reader.is_encrypted:
+            try:
+                reader.decrypt("")
+            except Exception:
+                pass
 
         pages: List[ExtractedPage] = []
         total_text_length = 0

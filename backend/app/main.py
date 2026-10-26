@@ -23,8 +23,30 @@ async def lifespan(app: FastAPI):
         from app.services.document_service import doc_service
         from app.db.session import AsyncSessionLocal
         from app.models.document import Document
+        from app.models.user import User
+        from app.core.security import get_password_hash, verify_password
         from sqlalchemy import select
         async with AsyncSessionLocal() as session:
+            # Seed demo user if missing or ensure demo password is valid
+            demo_stmt = select(User).where(User.email == "demo@cortex.ai")
+            demo_user = (await session.execute(demo_stmt)).scalar_one_or_none()
+            if not demo_user:
+                demo_user = User(
+                    email="demo@cortex.ai",
+                    hashed_password=get_password_hash("demo123456"),
+                    full_name="Demo User",
+                    role="user",
+                    is_active=True,
+                    auth_provider="local",
+                )
+                session.add(demo_user)
+                await session.commit()
+                logger.info("Demo user demo@cortex.ai initialized successfully.")
+            elif not verify_password("demo123456", demo_user.hashed_password or ""):
+                demo_user.hashed_password = get_password_hash("demo123456")
+                await session.commit()
+                logger.info("Demo user demo@cortex.ai password synced.")
+
             stalled_stmt = select(Document).where(Document.status.in_(["uploaded", "queued", "processing"]))
             stalled_docs = (await session.execute(stalled_stmt)).scalars().all()
             re_dispatched = 0

@@ -464,44 +464,66 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#ededed]">
-              <thead className="bg-[#141414] text-[#8e8e8e] text-[11px] font-medium border-b border-[#262626]">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Document</th>
-                  <th className="px-4 py-3 font-medium">Size</th>
-                  <th className="px-4 py-3 font-medium">Pages</th>
-                  <th className="px-4 py-3 font-medium">Sections</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Date Added</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#242424]">
-                {recentDocs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-[#202020] transition duration-150">
-                    <td className="px-4 py-3 font-medium text-white truncate max-w-xs">
-                      {doc.title || doc.filename}
-                    </td>
-                    <td className="px-4 py-3 text-[#8e8e8e]">
-                      {formatBytes(doc.file_size)}
-                    </td>
-                    <td className="px-4 py-3 text-[#a0a0a0]">
-                      {doc.page_count > 0 ? doc.page_count : 1}
-                    </td>
-                    <td className="px-4 py-3 text-[#a0a0a0]">
-                      {doc.chunk_count > 0 ? `${doc.chunk_count} sections` : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge status={doc.status} />
-                    </td>
-                    <td className="px-4 py-3 text-[#707070]">
-                      {doc.created_at ? doc.created_at.slice(0, 10) : '—'}
-                    </td>
+          <>
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs text-[#ededed]">
+                <thead className="bg-[#141414] text-[#8e8e8e] text-[11px] font-medium border-b border-[#262626]">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Document</th>
+                    <th className="px-4 py-3 font-medium">Size</th>
+                    <th className="px-4 py-3 font-medium">Pages</th>
+                    <th className="px-4 py-3 font-medium">Sections</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Date Added</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[#242424]">
+                  {recentDocs.map((doc) => (
+                    <tr key={doc.id} className="hover:bg-[#202020] transition duration-150">
+                      <td className="px-4 py-3 font-medium text-white truncate max-w-xs">
+                        {doc.title || doc.filename}
+                      </td>
+                      <td className="px-4 py-3 text-[#8e8e8e]">
+                        {formatBytes(doc.file_size)}
+                      </td>
+                      <td className="px-4 py-3 text-[#a0a0a0]">
+                        {doc.page_count > 0 ? doc.page_count : 1}
+                      </td>
+                      <td className="px-4 py-3 text-[#a0a0a0]">
+                        {doc.chunk_count > 0 ? `${doc.chunk_count} sections` : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge status={doc.status} />
+                      </td>
+                      <td className="px-4 py-3 text-[#707070]">
+                        {doc.created_at ? doc.created_at.slice(0, 10) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="sm:hidden divide-y divide-[#242424]">
+              {recentDocs.map((doc) => (
+                <div key={doc.id} className="py-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-heading font-medium text-white text-xs truncate max-w-[200px]">
+                      {doc.title || doc.filename}
+                    </p>
+                    <Badge status={doc.status} />
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-[#8e8e8e]">
+                    <span>{formatBytes(doc.file_size)}</span>
+                    <span>•</span>
+                    <span>{doc.page_count > 0 ? `${doc.page_count}p` : '1p'}</span>
+                    <span>•</span>
+                    <span>{doc.chunk_count > 0 ? `${doc.chunk_count} sections` : '0 sections'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -67,4 +67,9 @@ export const documentsApi = {
     link.remove();
     window.URL.revokeObjectURL(url);
   },
+
+  getDocumentChunks: async (documentId) => {
+    const response = await api.get(`/documents/${documentId}/chunks`);
+    return response.data;
+  },
 };

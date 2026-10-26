@@ -1443,22 +1443,23 @@ export default function ChatPage() {
                   </div>
                 )}
 
-                {/* Scoped Document Indicator (Mobile Chip) */}
+                {/* Scoped Document Indicator (Compact Mobile Pill Chip) */}
                 {selectedDocIds.length > 0 && (
-                  <div className="sm:hidden flex items-center justify-between text-[11px] text-[#a0a0a0] mb-2 px-2.5 py-1 bg-[#1c1c1c] rounded-lg border border-[#2a2a2a]">
-                    <div className="flex items-center gap-1.5 truncate">
+                  <div className="sm:hidden flex items-center mb-1.5 px-0.5">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1c1c1c] border border-[#2e2e2e] text-[11px] text-[#b0b0b0] shadow-sm">
                       <Folder className="w-3 h-3 text-white/80 shrink-0" />
-                      <span className="truncate">
-                        Scoped to {selectedDocIds.length} doc{selectedDocIds.length > 1 ? 's' : ''}
+                      <span>
+                        {selectedDocIds.length} doc{selectedDocIds.length > 1 ? 's' : ''} active
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDocIds([])}
+                        className="text-[#888888] hover:text-white ml-0.5 p-0.5 rounded-full hover:bg-[#2c2c2c] transition-colors cursor-pointer"
+                        title="Clear document filter"
+                      >
+                        <CloseIcon className="w-3 h-3" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDocIds([])}
-                      className="text-[11px] text-[#8e8e8e] hover:text-white ml-2 shrink-0 cursor-pointer"
-                    >
-                      Clear
-                    </button>
                   </div>
                 )}
 

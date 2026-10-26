@@ -52,6 +52,9 @@ export default function DocumentsPage() {
   const [previewBlobUrl, setPreviewBlobUrl] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState('');
+  const [previewTab, setPreviewTab] = useState('preview'); // 'preview' | 'text'
+  const [previewChunks, setPreviewChunks] = useState([]);
+  const [chunksLoading, setChunksLoading] = useState(false);
 
   // Alert modal state
   const [alertNotice, setAlertNotice] = useState(null);
@@ -63,24 +66,45 @@ export default function DocumentsPage() {
     const isPdf = previewDoc?.mime_type === 'application/pdf';
     const isImage = previewDoc?.mime_type?.startsWith('image/');
 
-    if (previewDoc && (isPdf || isImage)) {
-      setPreviewLoading(true);
-      setPreviewError('');
+    if (previewDoc) {
+      setPreviewTab('preview');
+      setChunksLoading(true);
       documentsApi
-        .getPreviewBlob(previewDoc.id)
-        .then((blob) => {
-          objectUrl = window.URL.createObjectURL(blob);
-          setPreviewBlobUrl(objectUrl);
+        .getDocumentChunks(previewDoc.id)
+        .then((data) => {
+          setPreviewChunks(data?.chunks || []);
         })
-        .catch((err) => {
-          console.error('Failed to load preview blob:', err);
-          setPreviewBlobUrl(documentsApi.getPreviewUrl(previewDoc.id));
+        .catch(() => {
+          setPreviewChunks([]);
         })
         .finally(() => {
-          setPreviewLoading(false);
+          setChunksLoading(false);
         });
+
+      if (isPdf || isImage) {
+        setPreviewLoading(true);
+        setPreviewError('');
+        documentsApi
+          .getPreviewBlob(previewDoc.id)
+          .then((blob) => {
+            objectUrl = window.URL.createObjectURL(blob);
+            setPreviewBlobUrl(objectUrl);
+          })
+          .catch((err) => {
+            console.error('Failed to load preview blob:', err);
+            setPreviewBlobUrl(documentsApi.getPreviewUrl(previewDoc.id));
+          })
+          .finally(() => {
+            setPreviewLoading(false);
+          });
+      } else {
+        setPreviewBlobUrl(null);
+        setPreviewLoading(false);
+        setPreviewError('');
+      }
     } else {
       setPreviewBlobUrl(null);
+      setPreviewChunks([]);
       setPreviewLoading(false);
       setPreviewError('');
     }
@@ -334,7 +358,7 @@ export default function DocumentsPage() {
       {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-[#282828]">
         {/* Status Filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 max-w-full scrollbar-none">
           {filterTabs.map((tab) => (
             <button
               key={tab.value}
@@ -342,7 +366,7 @@ export default function DocumentsPage() {
                 setStatusFilter(tab.value);
                 setPage(1);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition-all duration-150 cursor-pointer ${
                 statusFilter === tab.value
                   ? 'bg-white text-[#141414] font-semibold shadow-sm'
                   : 'text-[#8e8e8e] hover:bg-[#242424] hover:text-white'
@@ -404,147 +428,270 @@ export default function DocumentsPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#ededed]">
-              <thead className="bg-[#161616] text-[#8e8e8e] text-[11px] font-medium tracking-wide border-b border-[#262626]">
-                <tr>
-                  <th className="px-6 py-3.5 font-medium">Document</th>
-                  <th className="px-3 py-3.5 font-medium">Type</th>
-                  <th className="px-4 py-3.5 font-medium">Size</th>
-                  <th className="px-4 py-3.5 font-medium">Pages</th>
-                  <th className="px-4 py-3.5 font-medium">Extraction</th>
-                  <th className="px-4 py-3.5 font-medium">Status & Progress</th>
-                  <th className="px-6 py-3.5 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#242424]">
-                {documents.map((doc) => {
-                  const isProcessing =
-                    doc.status === 'processing' ||
-                    doc.status === 'queued' ||
-                    doc.status === 'uploaded';
-                  const progress = doc.metadata_json?.progress ?? (isProcessing ? 25 : 100);
-                  const stage = doc.metadata_json?.stage || doc.status;
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-[#ededed]">
+                <thead className="bg-[#161616] text-[#8e8e8e] text-[11px] font-medium tracking-wide border-b border-[#262626]">
+                  <tr>
+                    <th className="px-6 py-3.5 font-medium">Document</th>
+                    <th className="px-3 py-3.5 font-medium">Type</th>
+                    <th className="px-4 py-3.5 font-medium">Size</th>
+                    <th className="px-4 py-3.5 font-medium">Pages</th>
+                    <th className="px-4 py-3.5 font-medium">Extraction</th>
+                    <th className="px-4 py-3.5 font-medium">Status & Progress</th>
+                    <th className="px-6 py-3.5 text-right font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#242424]">
+                  {documents.map((doc) => {
+                    const isProcessing =
+                      doc.status === 'processing' ||
+                      doc.status === 'queued' ||
+                      doc.status === 'uploaded';
+                    const progress = doc.metadata_json?.progress ?? (isProcessing ? 25 : 100);
+                    const stage = doc.metadata_json?.stage || doc.status;
 
-                  return (
-                    <tr key={doc.id} className="hover:bg-[#202020] transition-colors duration-150">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#222222] border border-[#2e2e2e] text-[#a0a0a0] flex items-center justify-center shrink-0">
-                            {doc.mime_type?.startsWith('image/') ? (
-                              <ImageIcon className="w-4 h-4" />
-                            ) : (
-                              <FileText className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-heading font-medium text-white text-xs sm:text-sm truncate max-w-xs">
-                              {doc.title || doc.filename}
-                            </p>
-                            <p className="font-sans text-[11px] text-[#707070] truncate flex items-center gap-2">
-                              <span>{doc.filename}</span>
-                              {doc.created_at && (
-                                <>
-                                  <span>•</span>
-                                  <span>{new Date(doc.created_at).toLocaleDateString()}</span>
-                                </>
+                    return (
+                      <tr key={doc.id} className="hover:bg-[#202020] transition-colors duration-150">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-[#222222] border border-[#2e2e2e] text-[#a0a0a0] flex items-center justify-center shrink-0">
+                              {doc.mime_type?.startsWith('image/') ? (
+                                <ImageIcon className="w-4 h-4" />
+                              ) : (
+                                <FileText className="w-4 h-4" />
                               )}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-4 whitespace-nowrap">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#222222] border border-[#333333] text-[#cfcfcf]">
-                          {getDocTypeBadge(doc.filename, doc.mime_type)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-[#8e8e8e]">
-                        {formatSize(doc.file_size)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-xs text-[#a0a0a0]">
-                        {doc.page_count > 0 ? doc.page_count : '—'}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {renderExtractionMethod(doc)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {isProcessing ? (
-                          <div className="space-y-1.5 min-w-[130px]">
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-[#a0a0a0] capitalize flex items-center gap-1.5">
-                                <Spinner size="sm" />
-                                {stage}
-                              </span>
-                              <span className="font-mono text-[#8e8e8e]">{progress}%</span>
                             </div>
-                            <div className="w-full bg-[#242424] rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className="bg-white h-full transition-all duration-300 rounded-full"
-                                style={{ width: `${Math.max(5, progress)}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <Badge status={doc.status} />
-                            {doc.error_message && (
-                              <p
-                                className="text-[11px] text-rose-400 mt-1 truncate max-w-xs"
-                                title={doc.error_message}
-                              >
-                                {doc.error_message}
+                            <div className="min-w-0">
+                              <p className="font-heading font-medium text-white text-xs sm:text-sm truncate max-w-xs">
+                                {doc.title || doc.filename}
                               </p>
-                            )}
+                              <p className="font-sans text-[11px] text-[#707070] truncate flex items-center gap-2">
+                                <span>{doc.filename}</span>
+                                {doc.created_at && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* Preview */}
-                          <button
-                            onClick={() => setPreviewDoc(doc)}
-                            title="Preview document"
-                            className="p-1.5 text-[#8e8e8e] hover:text-white hover:bg-[#282828] rounded-lg transition cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-
-                          {/* Download Original File */}
-                          <button
-                            onClick={() => handleDownload(doc)}
-                            title="Download original file"
-                            className="p-1.5 text-[#8e8e8e] hover:text-white hover:bg-[#282828] rounded-lg transition cursor-pointer"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-
-                          {/* Retry if failed */}
-                          {doc.status === 'failed' && (
-                            <button
-                              onClick={() => handleRetry(doc.id)}
-                              title="Retry processing"
-                              className="p-1.5 text-amber-400 hover:text-amber-300 hover:bg-[#2d2217] rounded-lg transition cursor-pointer"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#222222] border border-[#333333] text-[#cfcfcf]">
+                            {getDocTypeBadge(doc.filename, doc.mime_type)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-[#8e8e8e]">
+                          {formatSize(doc.file_size)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-[#a0a0a0]">
+                          {doc.page_count > 0 ? doc.page_count : '—'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {renderExtractionMethod(doc)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {isProcessing ? (
+                            <div className="space-y-1.5 min-w-[130px]">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className="text-[#a0a0a0] capitalize flex items-center gap-1.5">
+                                  <Spinner size="sm" />
+                                  {stage}
+                                </span>
+                                <span className="font-mono text-[#8e8e8e]">{progress}%</span>
+                              </div>
+                              <div className="w-full bg-[#242424] rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-white h-full transition-all duration-300 rounded-full"
+                                  style={{ width: `${Math.max(5, progress)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <Badge status={doc.status} />
+                              {doc.error_message && (
+                                <p
+                                  className="text-[11px] text-rose-400 mt-1 truncate max-w-xs"
+                                  title={doc.error_message}
+                                >
+                                  {doc.error_message}
+                                </p>
+                              )}
+                            </div>
                           )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* Preview */}
+                            <button
+                              onClick={() => setPreviewDoc(doc)}
+                              title="Preview document"
+                              className="p-1.5 text-[#8e8e8e] hover:text-white hover:bg-[#282828] rounded-lg transition cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => setDeleteDoc(doc)}
-                            title="Delete document"
-                            className="p-1.5 text-[#8e8e8e] hover:text-rose-400 hover:bg-[#251717] rounded-lg transition cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            {/* Download Original File */}
+                            <button
+                              onClick={() => handleDownload(doc)}
+                              title="Download original file"
+                              className="p-1.5 text-[#8e8e8e] hover:text-white hover:bg-[#282828] rounded-lg transition cursor-pointer"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+
+                            {/* Retry if failed */}
+                            {doc.status === 'failed' && (
+                              <button
+                                onClick={() => handleRetry(doc.id)}
+                                title="Retry processing"
+                                className="p-1.5 text-amber-400 hover:text-amber-300 hover:bg-[#2d2217] rounded-lg transition cursor-pointer"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => setDeleteDoc(doc)}
+                              title="Delete document"
+                              className="p-1.5 text-[#8e8e8e] hover:text-rose-400 hover:bg-[#251717] rounded-lg transition cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="sm:hidden divide-y divide-[#242424]">
+              {documents.map((doc) => {
+                const isProcessing =
+                  doc.status === 'processing' ||
+                  doc.status === 'queued' ||
+                  doc.status === 'uploaded';
+                const progress = doc.metadata_json?.progress ?? (isProcessing ? 25 : 100);
+                const stage = doc.metadata_json?.stage || doc.status;
+
+                return (
+                  <div key={doc.id} className="p-3.5 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#222222] border border-[#2e2e2e] text-[#a0a0a0] flex items-center justify-center shrink-0">
+                          {doc.mime_type?.startsWith('image/') ? (
+                            <ImageIcon className="w-4 h-4" />
+                          ) : (
+                            <FileText className="w-4 h-4" />
+                          )}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <div className="min-w-0">
+                          <p className="font-heading font-medium text-white text-xs truncate">
+                            {doc.title || doc.filename}
+                          </p>
+                          <p className="font-sans text-[11px] text-[#707070] truncate">
+                            {doc.filename}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#222222] border border-[#333333] text-[#cfcfcf] shrink-0">
+                        {getDocTypeBadge(doc.filename, doc.mime_type)}
+                      </span>
+                    </div>
+
+                    {/* Metadata tags */}
+                    <div className="flex items-center flex-wrap gap-2 text-[11px] text-[#8e8e8e]">
+                      <span>{formatSize(doc.file_size)}</span>
+                      <span>•</span>
+                      <span>{doc.page_count > 0 ? `${doc.page_count}p` : '1p'}</span>
+                      <span>•</span>
+                      <div>{renderExtractionMethod(doc)}</div>
+                    </div>
+
+                    {/* Status / Progress */}
+                    {isProcessing ? (
+                      <div className="space-y-1 bg-[#161616] p-2 rounded-xl border border-[#262626]">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-[#a0a0a0] capitalize flex items-center gap-1.5">
+                            <Spinner size="sm" />
+                            {stage}
+                          </span>
+                          <span className="font-mono text-[#8e8e8e]">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-[#242424] rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-white h-full transition-all duration-300 rounded-full"
+                            style={{ width: `${Math.max(5, progress)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <Badge status={doc.status} />
+                        {doc.created_at && (
+                          <span className="text-[10px] text-[#616161]">
+                            {new Date(doc.created_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {doc.error_message && (
+                      <p className="text-[11px] text-rose-400 bg-rose-950/20 p-2 rounded-lg border border-rose-900/30">
+                        {doc.error_message}
+                      </p>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-[#222222]">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-[#b0b0b0] hover:text-white bg-[#222222] hover:bg-[#2c2c2c] rounded-lg transition cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Preview</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(doc)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-[#b0b0b0] hover:text-white bg-[#222222] hover:bg-[#2c2c2c] rounded-lg transition cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                      </button>
+                      {doc.status === 'failed' && (
+                        <button
+                          type="button"
+                          onClick={() => handleRetry(doc.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-amber-400 hover:text-amber-300 bg-amber-950/30 hover:bg-amber-900/40 rounded-lg transition cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Retry</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setDeleteDoc(doc)}
+                        className="p-1.5 text-[#8e8e8e] hover:text-rose-400 hover:bg-[#251717] rounded-lg transition cursor-pointer"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
@@ -677,20 +824,95 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!previewDoc}
         onClose={() => setPreviewDoc(null)}
-        title={previewDoc?.title || 'Document Preview'}
-        maxWidth="max-w-5xl"
+        title={previewDoc?.title || previewDoc?.filename || 'Document Preview'}
+        maxWidth="max-w-4xl"
       >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-[#8e8e8e] pb-2 border-b border-[#262626]">
-            <span>File name: {previewDoc?.filename}</span>
-            <span>Pages: {previewDoc?.page_count || 1}</span>
-            <span>Sections: {previewDoc?.chunk_count || 0}</span>
+        <div className="space-y-3">
+          {/* Header metadata & tabs */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#262626]">
+            <div className="flex items-center gap-2.5 text-xs text-[#8e8e8e]">
+              <span>{previewDoc?.page_count || 1} pages</span>
+              <span>•</span>
+              <span>{previewDoc?.chunk_count || previewChunks.length} sections</span>
+              <span>•</span>
+              <span>{formatSize(previewDoc?.file_size)}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 self-end sm:self-auto">
+              <div className="inline-flex rounded-lg bg-[#141414] p-0.5 border border-[#2a2a2a]">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('preview')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer ${
+                    previewTab === 'preview'
+                      ? 'bg-[#2a2a2a] text-white shadow-sm'
+                      : 'text-[#8e8e8e] hover:text-white'
+                  }`}
+                >
+                  File Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('text')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                    previewTab === 'text'
+                      ? 'bg-[#2a2a2a] text-white shadow-sm'
+                      : 'text-[#8e8e8e] hover:text-white'
+                  }`}
+                >
+                  <span>Extracted Text</span>
+                  {previewChunks.length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#333333] text-[#b0b0b0]">
+                      {previewChunks.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleDownload(previewDoc)}
+                title="Download original file"
+                className="p-1.5 text-[#8e8e8e] hover:text-white hover:bg-[#242424] rounded-lg transition cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          <div className="h-[65vh] bg-[#141414] rounded-2xl overflow-hidden border border-[#282828] flex items-center justify-center relative">
-            {previewDoc?.mime_type === 'application/pdf' ? (
+          <div className="h-[60vh] max-h-[550px] bg-[#141414] rounded-xl overflow-hidden border border-[#282828] flex flex-col relative">
+            {previewTab === 'text' ? (
+              <div className="w-full h-full overflow-y-auto p-4 space-y-3 font-sans text-xs text-[#d4d4d4] leading-relaxed">
+                {chunksLoading ? (
+                  <div className="flex flex-col items-center justify-center h-full text-[#8e8e8e]">
+                    <Spinner size="md" />
+                    <p className="mt-2 text-xs">Loading extracted sections...</p>
+                  </div>
+                ) : previewChunks.length === 0 ? (
+                  <div className="text-center py-16 text-[#707070]">
+                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No extracted text sections found for this document.</p>
+                  </div>
+                ) : (
+                  previewChunks.map((chunk, idx) => (
+                    <div
+                      key={chunk.id || idx}
+                      className="p-3 bg-[#1a1a1a] rounded-xl border border-[#262626] space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-[#707070] font-mono">
+                        <span>Section {idx + 1}</span>
+                        {chunk.page_number && <span>Page {chunk.page_number}</span>}
+                      </div>
+                      <p className="text-white/90 whitespace-pre-wrap select-text">
+                        {chunk.content}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : previewDoc?.mime_type === 'application/pdf' ? (
               previewLoading ? (
-                <div className="flex flex-col items-center justify-center p-8 text-[#8e8e8e]">
+                <div className="flex flex-col items-center justify-center h-full p-8 text-[#8e8e8e]">
                   <Spinner size="lg" />
                   <p className="mt-3 text-xs">Loading document preview...</p>
                 </div>
@@ -699,37 +921,54 @@ export default function DocumentsPage() {
                   <p>{previewError}</p>
                 </div>
               ) : previewBlobUrl ? (
-                <iframe
-                  src={previewBlobUrl}
-                  className="w-full h-full border-none rounded-2xl"
-                  title="PDF Preview"
-                />
+                <div className="w-full h-full flex flex-col">
+                  {/* Mobile direct download pill because mobile Chrome blocks raw iframe PDF rendering */}
+                  <div className="sm:hidden flex items-center justify-between px-3 py-2 bg-[#1a1a1a] border-b border-[#282828] text-xs shrink-0">
+                    <span className="text-[#8e8e8e] truncate max-w-[170px]">Mobile PDF Viewer</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(previewDoc)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white text-[#141414] rounded-lg font-semibold text-[11px]"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Open / Download</span>
+                    </button>
+                  </div>
+                  <iframe
+                    src={previewBlobUrl}
+                    className="w-full flex-1 border-none"
+                    title="PDF Preview"
+                  />
+                </div>
               ) : null
             ) : previewDoc?.mime_type?.startsWith('image/') ? (
               previewLoading ? (
-                <div className="flex flex-col items-center justify-center p-8 text-[#8e8e8e]">
+                <div className="flex flex-col items-center justify-center h-full p-8 text-[#8e8e8e]">
                   <Spinner size="lg" />
                   <p className="mt-3 text-xs">Loading image preview...</p>
                 </div>
               ) : previewBlobUrl ? (
-                <img
-                  src={previewBlobUrl}
-                  alt={previewDoc.filename}
-                  className="max-h-full max-w-full object-contain p-2"
-                />
+                <div className="w-full h-full flex items-center justify-center p-2">
+                  <img
+                    src={previewBlobUrl}
+                    alt={previewDoc.filename}
+                    className="max-h-full max-w-full object-contain rounded-lg"
+                  />
+                </div>
               ) : (
                 <div className="text-center p-8 text-[#8e8e8e] text-xs">
                   <p>Image preview unavailable.</p>
                 </div>
               )
             ) : (
-              <div className="text-center p-8">
+              <div className="text-center p-8 m-auto">
                 <FileText className="w-12 h-12 text-[#616161] mx-auto mb-3" />
                 <p className="text-sm font-semibold text-white">Word Document (.docx)</p>
-                <p className="text-xs text-[#8e8e8e] mt-1 max-w-sm leading-relaxed">
-                  Extracted into {previewDoc?.chunk_count} sections ready for search. DOCX files do not render directly inside the browser.
+                <p className="text-xs text-[#8e8e8e] mt-1 max-w-sm leading-relaxed mx-auto">
+                  Extracted into {previewDoc?.chunk_count || previewChunks.length} searchable sections. Click "Extracted Text" above to read them directly, or download the original file.
                 </p>
                 <button
+                  type="button"
                   onClick={() => handleDownload(previewDoc)}
                   className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white text-[#141414] rounded-xl text-xs font-semibold hover:bg-[#e5e5e5] transition cursor-pointer"
                 >
