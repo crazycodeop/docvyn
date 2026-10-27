@@ -6,8 +6,8 @@ export default function Badge({ status, label, size = 'sm', className = '' }) {
 
   const statusConfig = {
     completed: {
-      bg: 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40 shadow-[0_0_10px_rgba(6,182,212,0.15)]',
-      dot: 'bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]',
+      bg: 'bg-[#16211a] text-emerald-400 border-[#223929]',
+      dot: 'bg-emerald-400',
       text: 'Ready to use',
     },
     processing: {

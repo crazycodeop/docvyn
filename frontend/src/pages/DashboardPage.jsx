@@ -54,9 +54,9 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-[#0a0a0a] text-white">
+      <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-[#141414] text-white">
         <Spinner size="lg" />
-        <p className="mt-4 text-xs font-medium text-[#a1a1aa]">
+        <p className="mt-4 text-xs font-medium text-[#8e8e8e]">
           Loading workspace statistics...
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function DashboardPage() {
   const chartPeak = Math.max(maxDocCount, maxMsgCount, 4);
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-10 py-6 space-y-6 pb-16 animate-fade-in bg-[#0a0a0a] text-white">
+    <div className="w-full px-4 sm:px-6 lg:px-10 py-6 space-y-6 pb-16 animate-fade-in bg-[#121212] text-white">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -87,17 +87,17 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={toggleSidebarCollapse}
-              className="hidden md:flex p-2 rounded-xl text-[#a1a1aa] hover:text-white hover:bg-white/[0.05] border border-white/[0.06] transition cursor-pointer shrink-0"
+              className="hidden md:flex p-2 rounded-xl text-[#8e8e8e] hover:text-white hover:bg-[#202020] border border-[#2c2c2b] transition cursor-pointer shrink-0"
               title="Expand sidebar"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
           )}
           <div>
-            <h1 className="font-heading text-xl sm:text-2xl font-semibold tracking-tight text-white">
+            <h1 className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-white">
               Dashboard
             </h1>
-            <p className="font-sans text-xs sm:text-sm text-[#a1a1aa] mt-1 leading-relaxed">
+            <p className="font-sans text-xs sm:text-sm text-[#8e8e8e] mt-1 leading-relaxed">
               Real-time activity and document overview for your workspace.
             </p>
           </div>
@@ -129,81 +129,81 @@ export default function DashboardPage() {
       {/* 4 Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Documents */}
-        <div className="p-5 rounded-2xl bg-[#161618] border border-white/[0.05] transition duration-150 hover:bg-[#1a1a1d] hover:border-white/[0.08] shadow-sm">
+        <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#282828] transition duration-150 hover:border-[#333333]">
           <div className="flex items-center justify-between">
-            <span className="font-sans text-[11px] font-medium text-[#a1a1aa]">
+            <span className="font-sans text-[11px] font-medium text-[#8e8e8e]">
               Documents
             </span>
-            <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white">
+            <div className="p-2 rounded-xl bg-[#222222] text-white">
               <FileText className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="font-heading text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+            <span className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {totalDocs}
             </span>
           </div>
-          <p className="font-sans text-xs text-[#a1a1aa] mt-1">
+          <p className="font-sans text-xs text-[#8e8e8e] mt-1">
             {stats?.total_pages ?? 0} total pages
           </p>
         </div>
 
         {/* Document Sections */}
-        <div className="p-5 rounded-2xl bg-[#161618] border border-white/[0.05] transition duration-150 hover:bg-[#1a1a1d] hover:border-white/[0.08] shadow-sm">
+        <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#282828] transition duration-150 hover:border-[#333333]">
           <div className="flex items-center justify-between">
-            <span className="font-sans text-[11px] font-medium text-[#a1a1aa]">
+            <span className="font-sans text-[11px] font-medium text-[#8e8e8e]">
               Document Sections
             </span>
-            <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white">
+            <div className="p-2 rounded-xl bg-[#222222] text-white">
               <Layers className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="font-heading text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+            <span className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {totalChunks}
             </span>
           </div>
-          <p className="font-sans text-xs text-[#a1a1aa] mt-1">
+          <p className="font-sans text-xs text-[#8e8e8e] mt-1">
             Searchable sections extracted
           </p>
         </div>
 
         {/* Conversations */}
-        <div className="p-5 rounded-2xl bg-[#161618] border border-white/[0.05] transition duration-150 hover:bg-[#1a1a1d] hover:border-white/[0.08] shadow-sm">
+        <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#282828] transition duration-150 hover:border-[#333333]">
           <div className="flex items-center justify-between">
-            <span className="font-sans text-[11px] font-medium text-[#a1a1aa]">
+            <span className="font-sans text-[11px] font-medium text-[#8e8e8e]">
               Conversations
             </span>
-            <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white">
+            <div className="p-2 rounded-xl bg-[#222222] text-white">
               <MessageSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="font-heading text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+            <span className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {totalConvs}
             </span>
           </div>
-          <p className="font-sans text-xs text-[#a1a1aa] mt-1">
+          <p className="font-sans text-xs text-[#8e8e8e] mt-1">
             {totalMessages} total questions asked
           </p>
         </div>
 
         {/* Storage Used */}
-        <div className="p-5 rounded-2xl bg-[#161618] border border-white/[0.05] transition duration-150 hover:bg-[#1a1a1d] hover:border-white/[0.08] shadow-sm">
+        <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#282828] transition duration-150 hover:border-[#333333]">
           <div className="flex items-center justify-between">
-            <span className="font-sans text-[11px] font-medium text-[#a1a1aa]">
+            <span className="font-sans text-[11px] font-medium text-[#8e8e8e]">
               Storage Used
             </span>
-            <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white">
+            <div className="p-2 rounded-xl bg-[#222222] text-white">
               <HardDrive className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="font-heading text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+            <span className="font-heading text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {formatBytes(storageUsed)}
             </span>
           </div>
-          <p className="font-sans text-xs text-[#a1a1aa] mt-1">
+          <p className="font-sans text-xs text-[#8e8e8e] mt-1">
             Total file storage in workspace
           </p>
         </div>
@@ -212,27 +212,27 @@ export default function DashboardPage() {
       {/* Main Charts & Activity Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: 14-Day Activity Timeline (8 cols) */}
-        <div className="lg:col-span-8 p-5 sm:p-6 rounded-2xl bg-[#161618] border border-white/[0.05] shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-8 p-5 sm:p-6 rounded-2xl bg-[#1a1a1a] border border-[#282828] flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h2 className="font-heading text-base font-semibold text-white tracking-tight flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-cyan-400" />
+                  <TrendingUp className="w-4 h-4 text-white/80" />
                   <span>Workspace Activity</span>
                 </h2>
-                <p className="font-sans text-xs text-[#a1a1aa] mt-0.5">
+                <p className="font-sans text-xs text-[#8e8e8e] mt-0.5">
                   Daily uploads and questions asked over the last 14 days.
                 </p>
               </div>
 
               {/* Filter toggle */}
-              <div className="flex items-center gap-1 bg-[#101010] p-1 rounded-xl border border-white/[0.05] text-xs">
+              <div className="flex items-center gap-1 bg-[#141414] p-1 rounded-xl border border-[#262626] text-xs">
                 <button
                   onClick={() => setTimelineMetric('both')}
                   className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                     timelineMetric === 'both'
-                      ? 'bg-white/[0.08] text-white font-semibold'
-                      : 'text-[#a1a1aa] hover:text-white'
+                      ? 'bg-[#262626] text-white font-medium'
+                      : 'text-[#8e8e8e] hover:text-white'
                   }`}
                 >
                   All
@@ -241,8 +241,8 @@ export default function DashboardPage() {
                   onClick={() => setTimelineMetric('docs')}
                   className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                     timelineMetric === 'docs'
-                      ? 'bg-white/[0.08] text-white font-semibold'
-                      : 'text-[#a1a1aa] hover:text-white'
+                      ? 'bg-[#262626] text-white font-medium'
+                      : 'text-[#8e8e8e] hover:text-white'
                   }`}
                 >
                   Documents
@@ -251,8 +251,8 @@ export default function DashboardPage() {
                   onClick={() => setTimelineMetric('messages')}
                   className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                     timelineMetric === 'messages'
-                      ? 'bg-white/[0.08] text-white font-semibold'
-                      : 'text-[#a1a1aa] hover:text-white'
+                      ? 'bg-[#262626] text-white font-medium'
+                      : 'text-[#8e8e8e] hover:text-white'
                   }`}
                 >
                   Questions
@@ -262,7 +262,7 @@ export default function DashboardPage() {
 
             {/* Timeline Bars Chart Container */}
             <div className="mt-8 pt-4">
-              <div className="h-44 flex items-end justify-between gap-2 px-1 border-b border-white/[0.06] pb-2">
+              <div className="h-44 flex items-end justify-between gap-2 px-1 border-b border-[#262626] pb-2">
                 {ingestionHistory.map((item, idx) => {
                   const docCount = item.count;
                   const msgCount = messageHistory[idx]?.count || 0;
@@ -276,9 +276,9 @@ export default function DashboardPage() {
                       className="flex-1 flex flex-col items-center h-full justify-end group relative cursor-pointer"
                     >
                       {/* Tooltip on hover */}
-                      <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-[#111111] border border-white/[0.08] text-white text-[11px] rounded-lg px-2.5 py-1 shadow-xl whitespace-nowrap z-20 font-sans">
-                        <div className="font-semibold text-white">{item.date}</div>
-                        <div className="text-[#a1a1aa]">
+                      <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-[#111111] border border-[#2e2e2e] text-white text-[11px] rounded-lg px-2.5 py-1 shadow-xl whitespace-nowrap z-20 font-sans">
+                        <div className="font-semibold">{item.date}</div>
+                        <div className="text-[#a0a0a0]">
                           {docCount} docs • {msgCount} questions
                         </div>
                       </div>
@@ -288,9 +288,7 @@ export default function DashboardPage() {
                         {(timelineMetric === 'both' || timelineMetric === 'docs') && (
                           <div
                             className={`w-full rounded-t transition-all duration-300 ${
-                              docCount > 0
-                                ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.35)]'
-                                : 'bg-white/[0.06]'
+                              docCount > 0 ? 'bg-white' : 'bg-[#262626]'
                             }`}
                             style={{ height: `${docHeight}%` }}
                           />
@@ -298,7 +296,7 @@ export default function DashboardPage() {
                         {(timelineMetric === 'both' || timelineMetric === 'messages') && (
                           <div
                             className={`w-full rounded-t transition-all duration-300 ${
-                              msgCount > 0 ? 'bg-white' : 'bg-white/[0.03]'
+                              msgCount > 0 ? 'bg-[#8e8e8e]' : 'bg-[#222222]'
                             }`}
                             style={{ height: `${msgHeight}%` }}
                           />
@@ -306,7 +304,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Day Label */}
-                      <span className="text-[10px] text-[#71717a] font-sans mt-1">
+                      <span className="text-[10px] text-[#616161] font-sans mt-1">
                         {idx % 2 === 0 ? dayLabel : ''}
                       </span>
                     </div>
@@ -315,18 +313,18 @@ export default function DashboardPage() {
               </div>
 
               {/* Chart Legend */}
-              <div className="flex items-center justify-between text-xs text-[#a1a1aa] mt-3 pt-2">
+              <div className="flex items-center justify-between text-xs text-[#8e8e8e] mt-3 pt-2">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />
-                    <span className="text-[#e0e0e0]">Documents Uploaded</span>
+                    <span className="w-2.5 h-2.5 rounded-sm bg-white" />
+                    <span>Documents Uploaded</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-white" />
-                    <span className="text-[#e0e0e0]">Questions Asked</span>
+                    <span className="w-2.5 h-2.5 rounded-sm bg-[#8e8e8e]" />
+                    <span>Questions Asked</span>
                   </div>
                 </div>
-                <div className="text-[11px] text-[#71717a]">
+                <div className="text-[11px] text-[#616161]">
                   Peak: {chartPeak} items / day
                 </div>
               </div>
@@ -335,12 +333,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Right: Document Status Breakdown (4 cols) */}
-        <div className="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-[#161618] border border-white/[0.05] shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-[#1a1a1a] border border-[#282828] flex flex-col justify-between">
           <div>
             <h2 className="font-heading text-base font-semibold text-white tracking-tight">
               Document Status
             </h2>
-            <p className="font-sans text-xs text-[#a1a1aa] mt-0.5">
+            <p className="font-sans text-xs text-[#8e8e8e] mt-0.5">
               Current state across uploaded files.
             </p>
 
@@ -350,14 +348,14 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between text-xs font-sans mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]" />
-                    <span className="text-[#e0e0e0]">Ready to use</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-[#d4d4d4]">Ready to use</span>
                   </div>
                   <span className="font-mono text-white font-semibold">{statusCounts.completed || 0}</span>
                 </div>
-                <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#262626] h-1.5 rounded-full overflow-hidden">
                   <div
-                    className="bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)] h-full rounded-full transition-all duration-200"
+                    className="bg-emerald-400 h-full rounded-full transition-all duration-200"
                     style={{ width: `${totalDocs > 0 ? ((statusCounts.completed || 0) / totalDocs) * 100 : 0}%` }}
                   />
                 </div>
@@ -368,11 +366,11 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between text-xs font-sans mb-1">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span className="text-[#e0e0e0]">Processing</span>
+                    <span className="text-[#d4d4d4]">Processing</span>
                   </div>
                   <span className="font-mono text-white font-semibold">{statusCounts.processing || 0}</span>
                 </div>
-                <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#262626] h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-white h-full rounded-full transition-all duration-200"
                     style={{ width: `${totalDocs > 0 ? ((statusCounts.processing || 0) / totalDocs) * 100 : 0}%` }}
@@ -384,16 +382,16 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between text-xs font-sans mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#a1a1aa]" />
-                    <span className="text-[#e0e0e0]">Waiting to process</span>
+                    <span className="w-2 h-2 rounded-full bg-[#8e8e8e]" />
+                    <span className="text-[#d4d4d4]">Waiting to process</span>
                   </div>
                   <span className="font-mono text-white font-semibold">
                     {(statusCounts.queued || 0) + (statusCounts.uploaded || 0)}
                   </span>
                 </div>
-                <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#262626] h-1.5 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#a1a1aa] h-full rounded-full transition-all duration-200"
+                    className="bg-[#8e8e8e] h-full rounded-full transition-all duration-200"
                     style={{
                       width: `${
                         totalDocs > 0
@@ -410,11 +408,11 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between text-xs font-sans mb-1">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-400" />
-                    <span className="text-[#e0e0e0]">Couldn't process</span>
+                    <span className="text-[#d4d4d4]">Couldn't process</span>
                   </div>
                   <span className="font-mono text-white font-semibold">{statusCounts.failed || 0}</span>
                 </div>
-                <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#262626] h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-rose-400 h-full rounded-full transition-all duration-200"
                     style={{ width: `${totalDocs > 0 ? ((statusCounts.failed || 0) / totalDocs) * 100 : 0}%` }}
@@ -425,9 +423,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick link to library */}
-          <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-sans">
-            <span className="text-[#a1a1aa]">Total: {totalDocs} docs</span>
-            <Link to="/documents" className="text-white hover:text-cyan-400 font-semibold inline-flex items-center gap-1 transition-colors">
+          <div className="pt-4 mt-4 border-t border-[#262626] flex items-center justify-between text-xs font-sans">
+            <span className="text-[#707070]">Total: {totalDocs} docs</span>
+            <Link to="/documents" className="text-white hover:underline font-medium inline-flex items-center gap-1">
               <span>View all documents</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -436,19 +434,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Documents Table Feed */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#161618] border border-white/[0.05] shadow-sm">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#1a1a1a] border border-[#282828]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-heading text-base font-semibold text-white tracking-tight">
               Recent Documents
             </h2>
-            <p className="font-sans text-xs text-[#a1a1aa] mt-0.5">
+            <p className="font-sans text-xs text-[#8e8e8e] mt-0.5">
               Latest files added to your workspace.
             </p>
           </div>
           <Link
             to="/documents"
-            className="text-xs font-sans font-semibold text-white hover:text-cyan-400 inline-flex items-center gap-1 transition-colors"
+            className="text-xs font-sans font-medium text-white hover:underline inline-flex items-center gap-1"
           >
             <span>All Documents</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -456,7 +454,7 @@ export default function DashboardPage() {
         </div>
 
         {recentDocs.length === 0 ? (
-          <div className="py-10 text-center text-[#a1a1aa] font-sans text-xs">
+          <div className="py-10 text-center text-[#707070] font-sans text-xs">
             <FileText className="w-8 h-8 text-[#555555] mx-auto mb-2" />
             <p>No documents uploaded yet in this workspace.</p>
             <Link to="/documents" className="mt-3 inline-block">
@@ -469,35 +467,35 @@ export default function DashboardPage() {
           <>
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs text-[#ededed]">
-                <thead className="bg-[#101010] text-[#a1a1aa] text-[11px] font-semibold border-b border-white/[0.06]">
+                <thead className="bg-[#141414] text-[#8e8e8e] text-[11px] font-medium border-b border-[#262626]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Document</th>
-                    <th className="px-4 py-3 font-semibold">Size</th>
-                    <th className="px-4 py-3 font-semibold">Pages</th>
-                    <th className="px-4 py-3 font-semibold">Sections</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Date Added</th>
+                    <th className="px-4 py-3 font-medium">Document</th>
+                    <th className="px-4 py-3 font-medium">Size</th>
+                    <th className="px-4 py-3 font-medium">Pages</th>
+                    <th className="px-4 py-3 font-medium">Sections</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Date Added</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04]">
+                <tbody className="divide-y divide-[#242424]">
                   {recentDocs.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-white/[0.02] transition duration-150">
-                      <td className="px-4 py-3 font-semibold text-white truncate max-w-xs">
+                    <tr key={doc.id} className="hover:bg-[#202020] transition duration-150">
+                      <td className="px-4 py-3 font-medium text-white truncate max-w-xs">
                         {doc.title || doc.filename}
                       </td>
-                      <td className="px-4 py-3 text-[#a1a1aa]">
+                      <td className="px-4 py-3 text-[#8e8e8e]">
                         {formatBytes(doc.file_size)}
                       </td>
-                      <td className="px-4 py-3 text-[#e0e0e0]">
+                      <td className="px-4 py-3 text-[#a0a0a0]">
                         {doc.page_count > 0 ? doc.page_count : 1}
                       </td>
-                      <td className="px-4 py-3 text-[#e0e0e0]">
+                      <td className="px-4 py-3 text-[#a0a0a0]">
                         {doc.chunk_count > 0 ? `${doc.chunk_count} sections` : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <Badge status={doc.status} />
                       </td>
-                      <td className="px-4 py-3 text-[#a1a1aa]">
+                      <td className="px-4 py-3 text-[#707070]">
                         {doc.created_at ? doc.created_at.slice(0, 10) : '—'}
                       </td>
                     </tr>
@@ -506,16 +504,16 @@ export default function DashboardPage() {
               </table>
             </div>
 
-            <div className="sm:hidden divide-y divide-white/[0.04]">
+            <div className="sm:hidden divide-y divide-[#242424]">
               {recentDocs.map((doc) => (
                 <div key={doc.id} className="py-3 space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-heading font-semibold text-white text-xs truncate max-w-[200px]">
+                    <p className="font-heading font-medium text-white text-xs truncate max-w-[200px]">
                       {doc.title || doc.filename}
                     </p>
                     <Badge status={doc.status} />
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-[#a1a1aa]">
+                  <div className="flex items-center gap-2 text-[11px] text-[#8e8e8e]">
                     <span>{formatBytes(doc.file_size)}</span>
                     <span>•</span>
                     <span>{doc.page_count > 0 ? `${doc.page_count}p` : '1p'}</span>

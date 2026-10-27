@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 
 export default function Card({ title, subtitle, action, children, className = '', bodyClassName = '' }) {
   return (
-    <div className={`bg-[#161618] rounded-2xl border border-white/[0.05] transition-all duration-150 hover:border-white/[0.08] shadow-sm ${className}`}>
+    <div className={`bg-[#1a1a1a] rounded-2xl border border-[#282828] transition-all duration-150 hover:border-[#333333] ${className}`}>
       {(title || subtitle || action) && (
-        <div className="px-5 sm:px-6 py-4 border-b border-white/[0.05] flex items-center justify-between gap-4">
+        <div className="px-5 sm:px-6 py-4 border-b border-[#242424] flex items-center justify-between gap-4">
           <div>
             {title && <h3 className="font-heading text-sm sm:text-base font-semibold text-white tracking-tight">{title}</h3>}
-            {subtitle && <p className="font-sans text-xs text-[#a1a1aa] mt-0.5 leading-normal">{subtitle}</p>}
+            {subtitle && <p className="font-sans text-xs text-[#8e8e8e] mt-0.5 leading-normal">{subtitle}</p>}
           </div>
           {action && <div className="shrink-0">{action}</div>}
         </div>
