@@ -104,11 +104,14 @@ async def preview_document(
 ):
     """Retrieves document raw bytes for secure browser preview."""
     content, doc = await doc_service.get_document_bytes(db=db, document_id=document_id, user_id=current_user.id)
+    is_pdf = content.startswith(b"%PDF-")
+    media_type = "application/pdf" if is_pdf else (doc.mime_type or "application/octet-stream")
     return Response(
         content=content,
-        media_type=doc.mime_type,
+        media_type=media_type,
         headers={
-            "Content-Disposition": f'inline; filename="{doc.filename}"'
+            "Content-Disposition": f'inline; filename="{doc.filename}"',
+            "Content-Type": media_type,
         }
     )
 

@@ -15,11 +15,11 @@ export default function NotFoundPage() {
           The requested page could not be found.
         </p>
         <div className="mt-6">
-          <Link to="/">
+          <a href="/" target="_top">
             <Button variant="primary" icon={ArrowLeft}>
               Back to Chat
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </div>

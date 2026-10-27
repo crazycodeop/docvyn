@@ -1,4 +1,4 @@
-import api from './client';
+import api, { API_BASE_URL } from './client';
 
 export const documentsApi = {
   getDocuments: async (params = {}) => {
@@ -42,7 +42,7 @@ export const documentsApi = {
 
   getPreviewUrl: (documentId) => {
     const token = localStorage.getItem('docrag_access_token');
-    return `/api/v1/documents/${documentId}/preview${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    return `${API_BASE_URL}/documents/${documentId}/preview${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
 
   downloadOriginal: async (documentId, fallbackFilename = 'document') => {

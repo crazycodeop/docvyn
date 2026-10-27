@@ -60,59 +60,80 @@ export default function DocumentsPage() {
   const [alertNotice, setAlertNotice] = useState(null);
 
   const fileInputRef = useRef(null);
+  const blobUrlRef = useRef(null);
 
-  useEffect(() => {
-    let objectUrl = null;
-    const isPdf = previewDoc?.mime_type === 'application/pdf';
-    const isImage = previewDoc?.mime_type?.startsWith('image/');
+  const cleanupBlobUrl = () => {
+    if (blobUrlRef.current) {
+      window.URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+  };
 
-    if (previewDoc) {
-      setPreviewTab('preview');
-      setChunksLoading(true);
-      documentsApi
-        .getDocumentChunks(previewDoc.id)
-        .then((data) => {
-          setPreviewChunks(data?.chunks || []);
-        })
-        .catch(() => {
-          setPreviewChunks([]);
-        })
-        .finally(() => {
-          setChunksLoading(false);
-        });
-
-      if (isPdf || isImage) {
-        setPreviewLoading(true);
-        setPreviewError('');
-        documentsApi
-          .getPreviewBlob(previewDoc.id)
-          .then((blob) => {
-            objectUrl = window.URL.createObjectURL(blob);
-            setPreviewBlobUrl(objectUrl);
-          })
-          .catch((err) => {
-            console.error('Failed to load preview blob:', err);
-            setPreviewBlobUrl(documentsApi.getPreviewUrl(previewDoc.id));
-          })
-          .finally(() => {
-            setPreviewLoading(false);
-          });
-      } else {
-        setPreviewBlobUrl(null);
-        setPreviewLoading(false);
-        setPreviewError('');
-      }
-    } else {
+  const loadDocumentPreview = async (doc) => {
+    if (!doc) {
+      cleanupBlobUrl();
       setPreviewBlobUrl(null);
       setPreviewChunks([]);
       setPreviewLoading(false);
       setPreviewError('');
+      return;
     }
 
-    return () => {
-      if (objectUrl) {
-        window.URL.revokeObjectURL(objectUrl);
+    const isPdf = doc.mime_type === 'application/pdf';
+    const isImage = doc.mime_type?.startsWith('image/');
+    const isDocx = doc.filename?.toLowerCase().endsWith('.docx') || doc.mime_type?.includes('word');
+
+    // For Word documents, automatically show extracted text tab
+    if (isDocx) {
+      setPreviewTab('text');
+    } else {
+      setPreviewTab('preview');
+    }
+
+    // Always fetch parsed chunks
+    setChunksLoading(true);
+    documentsApi
+      .getDocumentChunks(doc.id)
+      .then((data) => {
+        setPreviewChunks(data?.chunks || []);
+      })
+      .catch(() => {
+        setPreviewChunks([]);
+      })
+      .finally(() => {
+        setChunksLoading(false);
+      });
+
+    // Fetch binary blob for PDF or Image
+    if (isPdf || isImage) {
+      setPreviewLoading(true);
+      setPreviewError('');
+      try {
+        const blob = await documentsApi.getPreviewBlob(doc.id);
+        const url = window.URL.createObjectURL(blob);
+        cleanupBlobUrl();
+        blobUrlRef.current = url;
+        setPreviewBlobUrl(url);
+      } catch (err) {
+        console.error('Failed to load preview blob:', err);
+        cleanupBlobUrl();
+        setPreviewBlobUrl(null);
+        setPreviewError('Could not load visual file preview. You can read the extracted text or download the file.');
+      } finally {
+        setPreviewLoading(false);
       }
+    } else {
+      cleanupBlobUrl();
+      setPreviewBlobUrl(null);
+      setPreviewLoading(false);
+      setPreviewError('');
+    }
+  };
+
+  useEffect(() => {
+    loadDocumentPreview(previewDoc);
+    return () => {
+      cleanupBlobUrl();
     };
   }, [previewDoc]);
 
@@ -914,11 +935,34 @@ export default function DocumentsPage() {
               previewLoading ? (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-[#8e8e8e]">
                   <Spinner size="lg" />
-                  <p className="mt-3 text-xs">Loading document preview...</p>
+                  <p className="mt-3 text-xs font-medium">Loading document preview...</p>
                 </div>
               ) : previewError ? (
-                <div className="p-8 text-center text-rose-400 text-xs">
-                  <p>{previewError}</p>
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center max-w-sm mx-auto space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#251717] border border-[#3e2222] text-rose-300 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-heading text-sm font-semibold text-white">Visual Preview Unavailable</h4>
+                  <p className="text-xs text-[#8e8e8e] leading-relaxed">
+                    {previewError}
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab('text')}
+                      className="px-3 py-1.5 bg-[#252525] hover:bg-[#303030] border border-[#3a3a3a] text-white text-xs rounded-xl font-medium transition cursor-pointer"
+                    >
+                      Read Extracted Text
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(previewDoc)}
+                      className="px-3 py-1.5 bg-white text-[#141414] hover:bg-[#e5e5e5] text-xs rounded-xl font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download File</span>
+                    </button>
+                  </div>
                 </div>
               ) : previewBlobUrl ? (
                 <div className="w-full h-full flex flex-col">
@@ -940,12 +984,42 @@ export default function DocumentsPage() {
                     title="PDF Preview"
                   />
                 </div>
-              ) : null
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#8e8e8e] text-xs space-y-2">
+                  <FileText className="w-8 h-8 opacity-40 mx-auto" />
+                  <p>Document preview unavailable.</p>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTab('text')}
+                    className="mt-2 px-3 py-1.5 bg-[#252525] hover:bg-[#303030] text-white text-xs rounded-xl transition cursor-pointer"
+                  >
+                    View Extracted Text
+                  </button>
+                </div>
+              )
             ) : previewDoc?.mime_type?.startsWith('image/') ? (
               previewLoading ? (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-[#8e8e8e]">
                   <Spinner size="lg" />
                   <p className="mt-3 text-xs">Loading image preview...</p>
+                </div>
+              ) : previewError ? (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center max-w-sm mx-auto space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#251717] border border-[#3e2222] text-rose-300 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-heading text-sm font-semibold text-white">Image Preview Unavailable</h4>
+                  <p className="text-xs text-[#8e8e8e] leading-relaxed">
+                    {previewError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(previewDoc)}
+                    className="px-3 py-1.5 bg-white text-[#141414] hover:bg-[#e5e5e5] text-xs rounded-xl font-semibold transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Image</span>
+                  </button>
                 </div>
               ) : previewBlobUrl ? (
                 <div className="w-full h-full flex items-center justify-center p-2">

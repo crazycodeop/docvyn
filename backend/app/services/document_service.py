@@ -208,9 +208,37 @@ class DocumentService:
             )
             chunks = list((await db.execute(stmt)).scalars().all())
             if chunks:
+                try:
+                    from app.services.pdf_export_service import PDFExportService
+                    reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(doc.title or doc.filename, chunks)
+                    return reconstructed_pdf.getvalue(), doc
+                except Exception as export_err:
+                    logger.error(f"PDF export reconstruction failed: {export_err}")
+
+            # Fallback 1-page placeholder PDF so preview and downloads never crash
+            try:
                 from app.services.pdf_export_service import PDFExportService
-                reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(doc.title or doc.filename, chunks)
+                class FallbackChunk:
+                    def __init__(self, content: str):
+                        self.content = content
+                        self.page_number = 1
+
+                created_str = doc.created_at.strftime('%Y-%m-%d %H:%M UTC') if doc.created_at else "Recent"
+                fallback_text = (
+                    f"Document: {doc.title or doc.filename}\n"
+                    f"Uploaded: {created_str}\n"
+                    f"Status: {doc.status}\n\n"
+                    "Note: The original physical file was pruned during cloud container restart. "
+                    "All extracted text sections remain available in the docvyn database for search and chat."
+                )
+                reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(
+                    doc.title or doc.filename,
+                    [FallbackChunk(fallback_text)]
+                )
                 return reconstructed_pdf.getvalue(), doc
+            except Exception as final_err:
+                logger.error(f"Fallback PDF generation error: {final_err}")
+
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
 
 

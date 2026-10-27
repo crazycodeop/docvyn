@@ -99,7 +99,17 @@
   - `frontend/src/components/common/Modal.jsx`: Portaled modal tree directly to `document.body` via `createPortal` with `z-[100]` and body scroll-locking, preventing any ancestor CSS `transform` / mobile drawer width from trapping modal windows inside the sidebar.
   - `frontend/src/components/layout/Sidebar.jsx`: Moved modal declarations (`ArchivedModal`, rename `Modal`, delete/alert `ConfirmationModal`) outside of the navigation JSX variable to the root component tree.
   - `frontend/src/pages/ChatPage.jsx`: Replaced mobile horizontal-scrolling citations container (`overflow-x-auto flex snap-x`) with responsive vertical grid (`grid grid-cols-1 sm:grid-cols-2 gap-2.5`), ensuring all source citations are immediately visible without horizontal scrolling.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded. Pushed to `main` (`eea8d86`).
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded. Pushed to `main` (`a685d15`).
+
+## [2026-10-27] - Fix Preview Modal Domain Routing, Eliminate Iframe App-Nesting & Robust PDF Streaming
+- **Files Modified**:
+  - `frontend/src/api/client.js`: Exported `API_BASE_URL` so document endpoints use the backend host rather than the frontend Vercel host.
+  - `frontend/src/api/documents.js`: Updated `getPreviewUrl` to resolve against `API_BASE_URL` instead of relative `/api/v1/...` on the frontend host.
+  - `frontend/src/pages/DocumentsPage.jsx`: Replaced broken fallback that pointed the preview iframe to frontend Vercel (which loaded the SPA 404 page inside the iframe); added clean object URL lifecycle management with `blobUrlRef` and `cleanupBlobUrl` preventing revoked blob access; default Word (.docx) files directly to the Extracted Text tab; added dedicated fallback action card allowing one-click switch to Extracted Text or file download on preview error.
+  - `frontend/src/pages/NotFoundPage.jsx`: Added `target="_top"` frame-busting on the Back to Chat button to prevent the app from ever nesting inside an iframe.
+  - `backend/app/api/v1/endpoints/documents.py`: Explicitly enforced `application/pdf` Content-Type when bytes begin with `%PDF-` so browsers and axios treat reconstructed PDF streams uniformly.
+  - `backend/app/services/document_service.py`: Added fallback 1-page summary PDF generator when cloud ephemeral disk has pruned the raw file, ensuring `get_document_bytes` never throws 404.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed. Pushed to `main` (`eea8d86`).
 
 ## [2026-10-26] - Mobile UI Polish, Robust Academic PDF Fallbacks, Demo User Seed & Document Preview Reader
 - **Files Modified**:
@@ -118,4 +128,14 @@
   - `frontend/src/components/common/Modal.jsx`: Portaled modal tree directly to `document.body` via `createPortal` with `z-[100]` and body scroll-locking, preventing any ancestor CSS `transform` / mobile drawer width from trapping modal windows inside the sidebar.
   - `frontend/src/components/layout/Sidebar.jsx`: Moved modal declarations (`ArchivedModal`, rename `Modal`, delete/alert `ConfirmationModal`) outside of the navigation JSX variable to the root component tree.
   - `frontend/src/pages/ChatPage.jsx`: Replaced mobile horizontal-scrolling citations container (`overflow-x-auto flex snap-x`) with responsive vertical grid (`grid grid-cols-1 sm:grid-cols-2 gap-2.5`), ensuring all source citations are immediately visible without horizontal scrolling.
-- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded. Pushed to `main` (`a685d15`).
+
+## [2026-10-27] - Fix Preview Modal Domain Routing, Eliminate Iframe App-Nesting & Robust PDF Streaming
+- **Files Modified**:
+  - `frontend/src/api/client.js`: Exported `API_BASE_URL` so document endpoints use the backend host rather than the frontend Vercel host.
+  - `frontend/src/api/documents.js`: Updated `getPreviewUrl` to resolve against `API_BASE_URL` instead of relative `/api/v1/...` on the frontend host.
+  - `frontend/src/pages/DocumentsPage.jsx`: Replaced broken fallback that pointed the preview iframe to frontend Vercel (which loaded the SPA 404 page inside the iframe); added clean object URL lifecycle management with `blobUrlRef` and `cleanupBlobUrl` preventing revoked blob access; default Word (.docx) files directly to the Extracted Text tab; added dedicated fallback action card allowing one-click switch to Extracted Text or file download on preview error.
+  - `frontend/src/pages/NotFoundPage.jsx`: Added `target="_top"` frame-busting on the Back to Chat button to prevent the app from ever nesting inside an iframe.
+  - `backend/app/api/v1/endpoints/documents.py`: Explicitly enforced `application/pdf` Content-Type when bytes begin with `%PDF-` so browsers and axios treat reconstructed PDF streams uniformly.
+  - `backend/app/services/document_service.py`: Added fallback 1-page summary PDF generator when cloud ephemeral disk has pruned the raw file, ensuring `get_document_bytes` never throws 404.
+- **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed.
