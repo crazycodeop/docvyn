@@ -13,7 +13,7 @@
 - **LLM Provider**: **Groq Cloud** (`LLM_PROVIDER=groq`) running model **`openai/gpt-oss-120b`** (configured via `.env`).
 - **Embedding Provider**: **Local FastEmbed** (`BAAI/bge-small-en-v1.5`, 384-dimensional dense vectors).
 - **OCR Engine**: **Local RapidOCR** (`rapidocr-onnxruntime`), CPU-optimized ONNX model with zero external API calls and zero system tesseract dependency.
-- **Physical Storage**: Local disk storage provider (`backend/uploads/users/{user_id}/docs/`). Preserves exact original uploaded files, sizes, filenames, and MIME types.
+- **Physical & Database Storage**: Hybrid persistent storage provider. Disk storage (`backend/uploads/users/{user_id}/docs/`) with automated fallback and sync from `DocumentFile` table (`file_bytes: LargeBinary` / `BYTEA`). Survives ephemeral disk wipes (Render/Hugging Face restarts) while preserving exact original uploaded files, sizes, filenames, and MIME types.
 
 ---
 
@@ -44,6 +44,7 @@
   - `users`: User identity, hashed passwords, auth provider, role, timestamps.
   - `refresh_tokens`: Revocable refresh token storage.
   - `documents`: Document records, original filenames, paths, hash, page/chunk counts, processing status (`uploaded`, `processing`, `completed`, `failed`), and `metadata_json` (progress, stage, extraction_method, ocr_confidence).
+  - `document_files`: Raw binary storage (`LargeBinary` / `BYTEA`) for original uploaded files, guaranteeing persistence across ephemeral restarts.
   - `document_chunks`: Extracted text, page numbers, 384-dim vector embeddings, JSON metadata.
   - `conversations`: Chat sessions with `is_pinned` and `is_archived` status flags.
   - `messages`: Conversation turns (`user` or `assistant`), content, `citations_json`, tokens used.

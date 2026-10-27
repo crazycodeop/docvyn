@@ -5,6 +5,21 @@
 ---
 
 ### Recent Task Completed
+- **Task**: Persistent Original File Storage & Conversational Follow-Up RAG Memory
+  - **Persistent Binary Storage**:
+    - Created `DocumentFile` table (`document_files`) storing raw uploaded file bytes in DB (`LargeBinary` / `BYTEA`).
+    - Integrated automatic persistence in `create_document` and self-healing DB-to-disk cache retrieval in `get_document_bytes`.
+    - Eliminates file loss / generic PDF reconstruction when hosting containers (Render, Hugging Face) restart or prune ephemeral local disks.
+  - **Conversational Memory & Follow-Up RAG**:
+    - Added contextual query augmentation in `rag_service.py` so follow-up inquiries ("elaborate", "who signed it", "summarize that") incorporate prior conversation context into vector retrieval.
+    - Updated system instructions and added conversational fallback so follow-up conversations without new document chunk hits seamlessly respond using chat history instead of returning "insufficient information".
+    - Expanded conversation history context window to 10 messages.
+  - **Verification**:
+    - Backend Pytest: 23/23 passed.
+    - Frontend Vitest: 25/25 passed.
+    - Frontend Production Build: Vite production build succeeded cleanly.
+
+### Recent Task Completed
 - **Task**: Google OAuth 2.0 Integration, Supabase Cloud Database Provisioning, and GitHub Actions CI/CD Pipeline
   - **Google OAuth Integration**:
     - Integrated `@react-oauth/google` and wrapped application in `<GoogleOAuthProvider>`.

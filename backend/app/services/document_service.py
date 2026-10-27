@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.models.document import Document
+from app.models.document import Document, DocumentFile
 from app.models.chunk import DocumentChunk
 from app.services.extraction_service import ExtractionService, ExtractionError
 from app.storage import get_storage
@@ -98,12 +98,12 @@ class DocumentService:
         # 3. Compute SHA-256 hash
         file_hash = hashlib.sha256(content).hexdigest()
 
-        # 4. Save file to storage
+        # 4. Save file to storage & database for persistent retention across container restarts
         doc_id = str(uuid.uuid4())
         storage_rel_path = f"users/{user_id}/docs/{doc_id}_{filename}"
         stored_path = self.storage.save(content, storage_rel_path)
 
-        # 5. Create Document record
+        # 5. Create Document record and DocumentFile record
         doc = Document(
             id=doc_id,
             user_id=user_id,
@@ -121,7 +121,12 @@ class DocumentService:
                 "stage": "queued",
             },
         )
+        doc_file = DocumentFile(
+            document_id=doc_id,
+            file_bytes=content,
+        )
         db.add(doc)
+        db.add(doc_file)
         # CRITICAL: Commit transaction before dispatching task to avoid race condition!
         await db.commit()
         await db.refresh(doc)
@@ -196,11 +201,30 @@ class DocumentService:
         if not doc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
 
+        # 1. Try local storage first
         try:
-            content = self.storage.load(doc.file_path)
-            return content, doc
+            if self.storage.exists(doc.file_path):
+                content = self.storage.load(doc.file_path)
+                return content, doc
         except Exception as e:
-            logger.warning(f"Storage load failed for {doc.id} ({e}). Reconstructing from database chunks...")
+            logger.warning(f"Storage load failed for {doc.id} ({e})")
+
+        # 2. Try persistent database storage (survives container restarts)
+        try:
+            stmt = select(DocumentFile).where(DocumentFile.document_id == doc.id)
+            doc_file = (await db.execute(stmt)).scalar_one_or_none()
+            if doc_file and doc_file.file_bytes:
+                # Re-populate local storage cache for subsequent requests
+                try:
+                    self.storage.save(doc_file.file_bytes, doc.file_path)
+                except Exception:
+                    pass
+                return doc_file.file_bytes, doc
+        except Exception as db_err:
+            logger.warning(f"Database file retrieval failed for {doc.id}: {db_err}")
+
+        # 3. Fallback: Reconstruct from chunks if available (legacy documents)
+        try:
             stmt = (
                 select(DocumentChunk)
                 .where(DocumentChunk.document_id == doc.id)
@@ -208,38 +232,37 @@ class DocumentService:
             )
             chunks = list((await db.execute(stmt)).scalars().all())
             if chunks:
-                try:
-                    from app.services.pdf_export_service import PDFExportService
-                    reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(doc.title or doc.filename, chunks)
-                    return reconstructed_pdf.getvalue(), doc
-                except Exception as export_err:
-                    logger.error(f"PDF export reconstruction failed: {export_err}")
-
-            # Fallback 1-page placeholder PDF so preview and downloads never crash
-            try:
                 from app.services.pdf_export_service import PDFExportService
-                class FallbackChunk:
-                    def __init__(self, content: str):
-                        self.content = content
-                        self.page_number = 1
-
-                created_str = doc.created_at.strftime('%Y-%m-%d %H:%M UTC') if doc.created_at else "Recent"
-                fallback_text = (
-                    f"Document: {doc.title or doc.filename}\n"
-                    f"Uploaded: {created_str}\n"
-                    f"Status: {doc.status}\n\n"
-                    "Note: The original physical file was pruned during cloud container restart. "
-                    "All extracted text sections remain available in the docvyn database for search and chat."
-                )
-                reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(
-                    doc.title or doc.filename,
-                    [FallbackChunk(fallback_text)]
-                )
+                reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(doc.title or doc.filename, chunks)
                 return reconstructed_pdf.getvalue(), doc
-            except Exception as final_err:
-                logger.error(f"Fallback PDF generation error: {final_err}")
+        except Exception as export_err:
+            logger.error(f"PDF export reconstruction failed: {export_err}")
 
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
+        # 4. Fallback 1-page placeholder PDF so preview and downloads never crash
+        try:
+            from app.services.pdf_export_service import PDFExportService
+            class FallbackChunk:
+                def __init__(self, content: str):
+                    self.content = content
+                    self.page_number = 1
+
+            created_str = doc.created_at.strftime('%Y-%m-%d %H:%M UTC') if doc.created_at else "Recent"
+            fallback_text = (
+                f"Document: {doc.title or doc.filename}\n"
+                f"Uploaded: {created_str}\n"
+                f"Status: {doc.status}\n\n"
+                "Note: The original physical file was pruned during cloud container restart. "
+                "All extracted text sections remain available in the docvyn database for search and chat."
+            )
+            reconstructed_pdf = PDFExportService.export_document_chunks_to_pdf(
+                doc.title or doc.filename,
+                [FallbackChunk(fallback_text)]
+            )
+            return reconstructed_pdf.getvalue(), doc
+        except Exception as final_err:
+            logger.error(f"Fallback PDF generation error: {final_err}")
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document file not found.")
 
 
 doc_service = DocumentService()

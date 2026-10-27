@@ -1,6 +1,6 @@
 import uuid
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
-from sqlalchemy import ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import ForeignKey, Integer, JSON, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimeStampedModel
 
@@ -36,3 +36,21 @@ class Document(Base, TimeStampedModel):
         cascade="all, delete-orphan",
         order_by="DocumentChunk.chunk_index"
     )
+    file_data: Mapped[Optional["DocumentFile"]] = relationship(
+        "DocumentFile",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+
+class DocumentFile(Base, TimeStampedModel):
+    __tablename__ = "document_files"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    document_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("documents.id", ondelete="CASCADE"), unique=True, index=True, nullable=False
+    )
+    file_bytes: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+
+    document: Mapped["Document"] = relationship("Document", back_populates="file_data")
