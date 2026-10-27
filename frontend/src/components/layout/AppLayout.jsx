@@ -9,7 +9,7 @@ export default function AppLayout() {
   const { isSidebarCollapsed, toggleSidebarCollapse } = useSidebar();
 
   return (
-    <div className="h-screen w-screen flex bg-[#181817] text-[#ededed] overflow-hidden select-none">
+    <div className="h-screen w-screen flex bg-[#0a0a0a] text-[#ededed] overflow-hidden select-none">
       {/* Sidebar (Desktop retractable + Mobile slide-over drawer) */}
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
@@ -25,18 +25,18 @@ export default function AppLayout() {
         }`}
       >
         {/* Floating Card with 4 rounded edges on desktop, edge-to-edge on mobile */}
-        <div className="w-full h-full rounded-none md:rounded-2xl border-0 md:border border-[#262626] bg-[#121212] shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ease-in-out">
+        <div className="w-full h-full rounded-none md:rounded-2xl border-0 md:border border-white/[0.06] bg-[#0a0a0a] shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ease-in-out">
           {/* Mobile Header Bar (hidden on desktop md:hidden) */}
-          <div className="md:hidden h-12 w-full bg-[#121212] border-b border-[#222222] px-3 flex items-center justify-between shrink-0 z-20">
+          <div className="md:hidden h-12 w-full bg-[#0a0a0a] border-b border-white/[0.06] px-3 flex items-center justify-between shrink-0 z-20">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="p-1.5 rounded-lg text-[#8e8e8e] hover:text-white hover:bg-[#202020] transition cursor-pointer"
+              className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-white hover:bg-white/[0.05] transition cursor-pointer"
               title="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md overflow-hidden bg-[#1c1c1e] flex items-center justify-center border border-[#2e2e2e]">
+              <div className="w-5 h-5 rounded-md overflow-hidden bg-[#161618] flex items-center justify-center border border-white/[0.08]">
                 <img src="/favicon2.svg" alt="docvyn" className="w-full h-full object-cover" />
               </div>
               <span className="font-heading text-sm font-semibold text-white tracking-wide">
@@ -47,7 +47,7 @@ export default function AppLayout() {
           </div>
 
           {/* Content Viewport */}
-          <main className="flex-1 w-full h-full min-h-0 overflow-y-auto bg-[#121212] flex flex-col relative">
+          <main className="flex-1 w-full h-full min-h-0 overflow-y-auto bg-[#0a0a0a] flex flex-col relative">
             <Outlet context={{ isSidebarCollapsed, toggleSidebarCollapse }} />
           </main>
         </div>
