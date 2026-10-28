@@ -7,9 +7,9 @@ sdk: docker
 app_port: 7860
 ---
 
-# DocRAG — Enterprise-Grade Document Intelligence Platform
+# docvyn — Enterprise-Grade Document Intelligence Platform
 
-DocRAG is a production-oriented document intelligence platform that enables organizations to upload complex business documents (PDF, DOCX), process their contents through asynchronous distributed pipelines, store dense vector embeddings with **PostgreSQL / pgvector**, and execute grounded **Retrieval-Augmented Generation (RAG)** queries with verifiable source citations and exact page numbers.
+docvyn is a production-oriented document intelligence platform that enables organizations to upload complex business documents (PDF, DOCX), process their contents through asynchronous distributed pipelines, store dense vector embeddings with **PostgreSQL / pgvector**, and execute grounded **Retrieval-Augmented Generation (RAG)** queries with verifiable source citations and exact page numbers.
 
 ---
 
@@ -33,8 +33,8 @@ DocRAG is a production-oriented document intelligence platform that enables orga
   - Document library with real-time polling, status badges, drag-and-drop upload, retry, and preview.
   - Chat workspace with conversation history, multi-document scoping, renaming, and deletion.
 - **Robust Verification**:
-  - 16 backend integration/unit tests with Pytest and HTTPX.
-  - 6 frontend tests with Vitest and React Testing Library.
+  - 23 backend integration/unit tests with Pytest and HTTPX.
+  - 25 frontend tests with Vitest and React Testing Library.
   - Clean production build with Vite.
 
 ---
@@ -68,7 +68,7 @@ graph TD
 ## 3. Repository Structure
 
 ```text
-docrag/
+docvyn/
 ├── backend/
 │   ├── app/
 │   │   ├── api/v1/          # Versioned REST endpoints (auth, documents, chat, stats, health)
@@ -183,13 +183,13 @@ Service mapping:
 ```bash
 PYTHONPATH=backend .venv/bin/pytest backend/tests/ -v
 ```
-*Executes 16 unit and integration tests across authentication, token refresh, document parsing, chunking, user data isolation, and RAG retrieval.*
+*Executes 23 unit and integration tests across authentication, token refresh, document parsing, chunking, user data isolation, and RAG retrieval.*
 
 ### Frontend Test Suite (Vitest)
 ```bash
 npm test --prefix frontend
 ```
-*Executes Vitest component tests with React Testing Library.*
+*Executes 25 Vitest component tests with React Testing Library.*
 
 ### Production Build Verification
 ```bash
@@ -220,4 +220,4 @@ To regenerate documentation PDFs at any time:
 
 ## 8. License & Authors
 
-DocRAG Enterprise Intelligence Platform — Built with enterprise architectural best practices.
+docvyn Enterprise Intelligence Platform — Built with enterprise architectural best practices.

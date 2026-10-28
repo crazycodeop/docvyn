@@ -5,6 +5,15 @@
 ---
 
 ### Recent Task Completed
+- **Task**: README Rebranding from DocRAG to docvyn
+  - Updated main title heading and introductory description in `README.md` to `docvyn`.
+  - Updated root repository tree label to `docvyn/`.
+  - Synchronized test count metrics in README to current verified status (23 backend tests, 25 frontend tests).
+  - Updated footer and licensing references to `docvyn`.
+
+---
+
+### Recent Task Completed
 - **Task**: Persistent Original File Storage & Conversational Follow-Up RAG Memory
   - **Persistent Binary Storage**:
     - Created `DocumentFile` table (`document_files`) storing raw uploaded file bytes in DB (`LargeBinary` / `BYTEA`).
