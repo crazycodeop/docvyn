@@ -38,7 +38,8 @@ htmlcov/
 # Databases & Uploads
 *.db
 *.sqlite3
-test_docrag.db
+test_docvyn.db
+test_docvyn.db
 uploads/
 backend/uploads/
 

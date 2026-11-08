@@ -47,13 +47,13 @@ def create_sample_image(text="Invoice 98765"):
 
 def test_pdf_extraction_success():
     pdf_bytes = create_sample_pdf([
-        "DocRAG is an enterprise intelligence platform.",
+        "docvyn is an enterprise intelligence platform.",
         "Page two covers pgvector and RAG retrieval architecture."
     ])
     pages = ExtractionService.extract(pdf_bytes, "architecture.pdf")
     assert len(pages) == 2
     assert pages[0].page_number == 1
-    assert "DocRAG" in pages[0].text
+    assert "docvyn" in pages[0].text
     assert pages[0].metadata["extraction_method"] == "digital_pdf"
     assert pages[1].page_number == 2
     assert "pgvector" in pages[1].text
@@ -72,12 +72,12 @@ def test_empty_document_error():
 
 def test_docx_extraction_success():
     docx_bytes = create_sample_docx(
-        ["DocRAG supports enterprise DOCX documents."],
+        ["docvyn supports enterprise DOCX documents."],
         table_data=[["Metric", "Value"], ["Precision", "99%"]]
     )
     pages = ExtractionService.extract(docx_bytes, "sample.docx")
     assert len(pages) >= 1
-    assert "DocRAG supports enterprise DOCX" in pages[0].text
+    assert "docvyn supports enterprise DOCX" in pages[0].text
     assert "| Metric | Value |" in pages[0].text
     assert "| Precision | 99% |" in pages[0].text
     assert pages[0].metadata["extraction_method"] == "docx"

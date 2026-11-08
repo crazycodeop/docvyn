@@ -10,13 +10,13 @@ Use this skill whenever resuming work on the `docvyn` project or starting a new 
 ## Execution Steps
 
 1. **Read Core Operating Instructions**:
-   - Read [`AGENTS.md`](file:///home/vakildesk/Documents/docrag/AGENTS.md) at the repository root to load operational rules, constraints, and verification requirements.
+   - Read [`AGENTS.md`](file:///home/vakildesk/Documents/docvyn/AGENTS.md) at the repository root to load operational rules, constraints, and verification requirements.
 
 2. **Check Recent Progress & Status**:
-   - Read [`TASK_LOG.md`](file:///home/vakildesk/Documents/docrag/TASK_LOG.md) to inspect the last completed task, test status, and the recommended next action.
+   - Read [`TASK_LOG.md`](file:///home/vakildesk/Documents/docvyn/TASK_LOG.md) to inspect the last completed task, test status, and the recommended next action.
 
 3. **Inspect Architecture & Context**:
-   - Read [`PROJECT_CONTEXT.md`](file:///home/vakildesk/Documents/docrag/PROJECT_CONTEXT.md) to verify technology stack facts, database models, endpoints, and file responsibilities.
+   - Read [`PROJECT_CONTEXT.md`](file:///home/vakildesk/Documents/docvyn/PROJECT_CONTEXT.md) to verify technology stack facts, database models, endpoints, and file responsibilities.
 
 4. **Inspect Repository Working Tree**:
    - Check file status and recent modifications:

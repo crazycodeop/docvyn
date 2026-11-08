@@ -14,7 +14,7 @@ const api = axios.create({
 // Request interceptor to attach bearer token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('docrag_access_token');
+    const token = localStorage.getItem('docvyn_access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,32 +30,32 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('docrag_refresh_token');
+      const refreshToken = localStorage.getItem('docvyn_refresh_token');
       if (refreshToken) {
         try {
           const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           });
           const { access_token, refresh_token: newRefreshToken } = res.data;
-          localStorage.setItem('docrag_access_token', access_token);
+          localStorage.setItem('docvyn_access_token', access_token);
           if (newRefreshToken) {
-            localStorage.setItem('docrag_refresh_token', newRefreshToken);
+            localStorage.setItem('docvyn_refresh_token', newRefreshToken);
           }
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return api(originalRequest);
         } catch (refreshErr) {
           // Only clear and redirect if the refresh endpoint explicitly returned 401
           if (refreshErr.response?.status === 401) {
-            localStorage.removeItem('docrag_access_token');
-            localStorage.removeItem('docrag_refresh_token');
-            localStorage.removeItem('docrag_user');
+            localStorage.removeItem('docvyn_access_token');
+            localStorage.removeItem('docvyn_refresh_token');
+            localStorage.removeItem('docvyn_user');
             window.location.href = '/login';
           }
           return Promise.reject(refreshErr);
         }
       } else {
-        localStorage.removeItem('docrag_access_token');
-        localStorage.removeItem('docrag_user');
+        localStorage.removeItem('docvyn_access_token');
+        localStorage.removeItem('docvyn_user');
       }
     }
     return Promise.reject(error);

@@ -95,14 +95,14 @@ docvyn/
 │   └── Dockerfile           # Frontend Nginx production container
 ├── docs/                    # Technical Architecture Documentation & Design PDFs
 │   ├── diagrams/            # Mermaid diagram source files (.mmd)
-│   ├── 01_DocRAG_High_Level_Design.pdf
-│   ├── 02_DocRAG_Low_Level_Design.pdf
-│   ├── 03_DocRAG_Database_and_Storage_Design.pdf
-│   ├── 04_DocRAG_AI_and_RAG_Design.pdf
-│   ├── 05_DocRAG_Backend_and_Distributed_Processing.pdf
-│   ├── 06_DocRAG_Security_and_Reliability.pdf
-│   └── 07_DocRAG_Interview_Preparation.pdf
-├── DocRAG_Technical_Documentation.pdf # Master Technical Documentation PDF
+│   ├── 01_docvyn_High_Level_Design.pdf
+│   ├── 02_docvyn_Low_Level_Design.pdf
+│   ├── 03_docvyn_Database_and_Storage_Design.pdf
+│   ├── 04_docvyn_AI_and_RAG_Design.pdf
+│   ├── 05_docvyn_Backend_and_Distributed_Processing.pdf
+│   ├── 06_docvyn_Security_and_Reliability.pdf
+│   └── 07_docvyn_Interview_Preparation.pdf
+├── docvyn_Technical_Documentation.pdf # Master Technical Documentation PDF
 ├── docker-compose.yml       # Complete multi-container deployment stack
 ├── .env.example             # Environment variable template with placeholders
 └── README.md                # Project documentation
@@ -202,14 +202,14 @@ npm run build --prefix frontend
 
 Complete architectural specifications and interview preparation guides are generated as dedicated PDFs in `docs/`:
 
-1. `docs/01_DocRAG_High_Level_Design.pdf`: System architecture, trust boundaries, data flows, and trade-offs.
-2. `docs/02_DocRAG_Low_Level_Design.pdf`: Module decomposition, contracts, sequence flows, and design patterns.
-3. `docs/03_DocRAG_Database_and_Storage_Design.pdf`: ER diagram, PostgreSQL schema, pgvector indexing, and storage.
-4. `docs/04_DocRAG_AI_and_RAG_Design.pdf`: Recursive chunking, FastEmbed embeddings, and prompt-injection defense.
-5. `docs/05_DocRAG_Backend_and_Distributed_Processing.pdf`: FastAPI async lifecycle, transaction-safe dispatch, and idempotency.
-6. `docs/06_DocRAG_Security_and_Reliability.pdf`: Authentication, token rotation, multi-tenant isolation, and threat modeling.
-7. `docs/07_DocRAG_Interview_Preparation.pdf`: System design interview questions, scalability trade-offs, and model answers.
-8. `DocRAG_Technical_Documentation.pdf`: Master documentation consolidating all architectural topics.
+1. `docs/01_docvyn_High_Level_Design.pdf`: System architecture, trust boundaries, data flows, and trade-offs.
+2. `docs/02_docvyn_Low_Level_Design.pdf`: Module decomposition, contracts, sequence flows, and design patterns.
+3. `docs/03_docvyn_Database_and_Storage_Design.pdf`: ER diagram, PostgreSQL schema, pgvector indexing, and storage.
+4. `docs/04_docvyn_AI_and_RAG_Design.pdf`: Recursive chunking, FastEmbed embeddings, and prompt-injection defense.
+5. `docs/05_docvyn_Backend_and_Distributed_Processing.pdf`: FastAPI async lifecycle, transaction-safe dispatch, and idempotency.
+6. `docs/06_docvyn_Security_and_Reliability.pdf`: Authentication, token rotation, multi-tenant isolation, and threat modeling.
+7. `docs/07_docvyn_Interview_Preparation.pdf`: System design interview questions, scalability trade-offs, and model answers.
+8. `docvyn_Technical_Documentation.pdf`: Master documentation consolidating all architectural topics.
 
 To regenerate documentation PDFs at any time:
 ```bash

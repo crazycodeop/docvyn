@@ -5,7 +5,7 @@ from app.storage.local import LocalStorageProvider
 
 def test_local_storage_lifecycle(tmp_path):
     storage = LocalStorageProvider(base_dir=str(tmp_path))
-    content = b"Hello, DocRAG Storage System!"
+    content = b"Hello, docvyn Storage System!"
     rel_path = "docs/test_doc.pdf"
 
     # Save

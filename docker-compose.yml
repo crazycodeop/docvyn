@@ -3,25 +3,25 @@ version: '3.8'
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: docrag_postgres
+    container_name: docvyn_postgres
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-docrag}
+      POSTGRES_DB: ${POSTGRES_DB:-docvyn}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d docrag"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d docvyn"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: docrag_redis
+    container_name: docvyn_redis
     restart: always
     ports:
       - "6379:6379"
@@ -37,7 +37,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: docrag_backend
+    container_name: docvyn_backend
     restart: always
     depends_on:
       postgres:
@@ -45,8 +45,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/docrag
-      - SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/docrag
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/docvyn
+      - SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/docvyn
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -69,7 +69,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: docrag_celery_worker
+    container_name: docvyn_celery_worker
     restart: always
     depends_on:
       postgres:
@@ -77,8 +77,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/docrag
-      - SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/docrag
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/docvyn
+      - SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/docvyn
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -96,7 +96,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: docrag_frontend
+    container_name: docvyn_frontend
     restart: always
     depends_on:
       - backend

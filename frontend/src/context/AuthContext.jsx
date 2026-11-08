@@ -5,13 +5,13 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('docrag_access_token'));
+  const [token, setToken] = useState(localStorage.getItem('docvyn_access_token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('docrag_access_token');
-      const storedUser = localStorage.getItem('docrag_user');
+      const storedToken = localStorage.getItem('docvyn_access_token');
+      const storedUser = localStorage.getItem('docvyn_user');
       if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
@@ -21,16 +21,16 @@ export const AuthProvider = ({ children }) => {
         try {
           const profile = await authApi.getMe();
           setUser(profile);
-          localStorage.setItem('docrag_user', JSON.stringify(profile));
+          localStorage.setItem('docvyn_user', JSON.stringify(profile));
           setToken(storedToken);
         } catch (err) {
           console.error('Session restoration failed:', err);
           // ONLY clear session if server explicitly returned 401 (unauthorized / invalid token)
           // If server is temporarily restarting (502/503/Network Error), do NOT log out the user!
           if (err.response?.status === 401) {
-            localStorage.removeItem('docrag_access_token');
-            localStorage.removeItem('docrag_refresh_token');
-            localStorage.removeItem('docrag_user');
+            localStorage.removeItem('docvyn_access_token');
+            localStorage.removeItem('docvyn_refresh_token');
+            localStorage.removeItem('docvyn_user');
             setUser(null);
             setToken(null);
           } else {
@@ -47,10 +47,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const data = await authApi.login(email, password);
-    localStorage.setItem('docrag_access_token', data.access_token);
-    localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    localStorage.setItem('docvyn_access_token', data.access_token);
+    localStorage.setItem('docvyn_refresh_token', data.refresh_token);
     if (data.user) {
-      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+      localStorage.setItem('docvyn_user', JSON.stringify(data.user));
     }
     setToken(data.access_token);
     setUser(data.user);
@@ -59,10 +59,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, fullName) => {
     const data = await authApi.register(email, password, fullName);
-    localStorage.setItem('docrag_access_token', data.access_token);
-    localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    localStorage.setItem('docvyn_access_token', data.access_token);
+    localStorage.setItem('docvyn_refresh_token', data.refresh_token);
     if (data.user) {
-      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+      localStorage.setItem('docvyn_user', JSON.stringify(data.user));
     }
     setToken(data.access_token);
     setUser(data.user);
@@ -71,10 +71,10 @@ export const AuthProvider = ({ children }) => {
 
   const googleLogin = async (idToken) => {
     const data = await authApi.googleLogin(idToken);
-    localStorage.setItem('docrag_access_token', data.access_token);
-    localStorage.setItem('docrag_refresh_token', data.refresh_token);
+    localStorage.setItem('docvyn_access_token', data.access_token);
+    localStorage.setItem('docvyn_refresh_token', data.refresh_token);
     if (data.user) {
-      localStorage.setItem('docrag_user', JSON.stringify(data.user));
+      localStorage.setItem('docvyn_user', JSON.stringify(data.user));
     }
     setToken(data.access_token);
     setUser(data.user);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('docrag_refresh_token');
+    const refreshToken = localStorage.getItem('docvyn_refresh_token');
     await authApi.logout(refreshToken);
     setToken(null);
     setUser(null);

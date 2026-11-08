@@ -36,9 +36,9 @@ export const authApi = {
         await api.post('/auth/logout', { refresh_token: refreshToken });
       }
     } finally {
-      localStorage.removeItem('docrag_access_token');
-      localStorage.removeItem('docrag_refresh_token');
-      localStorage.removeItem('docrag_user');
+      localStorage.removeItem('docvyn_access_token');
+      localStorage.removeItem('docvyn_refresh_token');
+      localStorage.removeItem('docvyn_user');
     }
   },
 };

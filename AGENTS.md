@@ -13,7 +13,7 @@ These instructions are permanent. Every agent working in this repository must re
 3. **Verify Against Code**: Never make assumptions based on stale notes or training data. Always verify facts (endpoints, models, parameters, environment variables) directly in the source code before editing.
 4. **Preserve Working Architecture**:
    - **Frontend**: React 18, JavaScript, Vite, Tailwind CSS (dark neutral `#141414` palette).
-   - **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0 (async SQLite `test_docrag.db` in dev, PostgreSQL/pgvector compatible).
+   - **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0 (async SQLite `test_docvyn.db` in dev, PostgreSQL/pgvector compatible).
    - **AI Provider**: Groq Cloud (`openai/gpt-oss-120b`). Preserved entirely.
    - **Embeddings**: Local FastEmbed (`BAAI/bge-small-en-v1.5`, 384-dimension vectors).
    - **Core Workflows**: Grounded citations, document extraction, background Celery processing, PDF export, conversation pinning, archiving, searching, find in chat, speech-to-text, secure conversation sharing, and original file downloads.

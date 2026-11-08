@@ -6,7 +6,7 @@ broker_url = settings.get_celery_broker_url()
 backend_url = settings.get_celery_backend_url()
 
 celery_app = Celery(
-    "docrag_worker",
+    "docvyn_worker",
     broker=broker_url,
     backend=backend_url,
 )

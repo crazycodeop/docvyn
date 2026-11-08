@@ -7,7 +7,7 @@ from reportlab.pdfgen import canvas
 def create_sample_pdf_bytes():
     buf = io.BytesIO()
     c = canvas.Canvas(buf)
-    c.drawString(100, 750, "DocRAG Document API Test Content.")
+    c.drawString(100, 750, "docvyn Document API Test Content.")
     c.save()
     return buf.getvalue()
 

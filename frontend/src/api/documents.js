@@ -41,7 +41,7 @@ export const documentsApi = {
   },
 
   getPreviewUrl: (documentId) => {
-    const token = localStorage.getItem('docrag_access_token');
+    const token = localStorage.getItem('docvyn_access_token');
     return `${API_BASE_URL}/documents/${documentId}/preview${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
 

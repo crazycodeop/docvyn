@@ -17,4 +17,4 @@ def setup_logging():
     logging.getLogger("celery").setLevel(logging.INFO)
 
 
-logger = logging.getLogger("docrag")
+logger = logging.getLogger("docvyn")

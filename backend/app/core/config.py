@@ -4,14 +4,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "DocRAG"
+    PROJECT_NAME: str = "docvyn"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     TESTING: bool = False
 
     # Security & JWT
-    SECRET_KEY: str = "docrag-super-secret-development-key-change-in-production-2025"
+    SECRET_KEY: str = "docvyn-super-secret-development-key-change-in-production-2025"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 2  # 2 hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14  # 14 days
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: Optional[str] = None
 
     # Database: Supabase PostgreSQL or local PostgreSQL or local fallback
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/docrag"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/docvyn"
     SYNC_DATABASE_URL: Optional[str] = None
 
     # Redis & Celery
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     SUPABASE_BUCKET: str = "documents"
 
     # S3 / MinIO (optional)
-    S3_BUCKET: str = "docrag-documents"
+    S3_BUCKET: str = "docvyn-documents"
     S3_ENDPOINT_URL: Optional[str] = None
     S3_ACCESS_KEY: Optional[str] = None
     S3_SECRET_KEY: Optional[str] = None

@@ -55,9 +55,9 @@
 ### Recent Task Completed
 - **Task**: Configure Hugging Face Spaces (Docker) for 16 GB RAM Deployment
   - **Hugging Face Spaces Configuration**:
-    - Created root [`Dockerfile`](file:///home/vakildesk/Documents/docrag/Dockerfile) configured for Hugging Face Spaces with non-root UID 1000 user, `PORT=7860`, pre-baked FastEmbed cache, and permissions for `/app/uploads`.
-    - Added Hugging Face Space metadata frontmatter to [`README.md`](file:///home/vakildesk/Documents/docrag/README.md) (`sdk: docker`, `app_port: 7860`).
-    - Updated [`backend/start.sh`](file:///home/vakildesk/Documents/docrag/backend/start.sh) to default to port 7860 while honoring host dynamic ports.
+    - Created root [`Dockerfile`](file:///home/vakildesk/Documents/docvyn/Dockerfile) configured for Hugging Face Spaces with non-root UID 1000 user, `PORT=7860`, pre-baked FastEmbed cache, and permissions for `/app/uploads`.
+    - Added Hugging Face Space metadata frontmatter to [`README.md`](file:///home/vakildesk/Documents/docvyn/README.md) (`sdk: docker`, `app_port: 7860`).
+    - Updated [`backend/start.sh`](file:///home/vakildesk/Documents/docvyn/backend/start.sh) to default to port 7860 while honoring host dynamic ports.
   - **Verification**:
     - Backend Pytest: 22/22 passed.
     - Frontend Vitest: 25/25 passed.
@@ -163,3 +163,24 @@
   - `backend/app/api/v1/endpoints/documents.py`: Explicitly enforced `application/pdf` Content-Type when bytes begin with `%PDF-` so browsers and axios treat reconstructed PDF streams uniformly.
   - `backend/app/services/document_service.py`: Added fallback 1-page summary PDF generator when cloud ephemeral disk has pruned the raw file, ensuring `get_document_bytes` never throws 404.
 - **Verification**: 25/25 Vitest frontend tests passed, frontend production build succeeded, 23/23 pytest backend tests passed.
+
+
+---
+
+## Milestone: Complete Rebranding from DocRAG to docvyn
+- **Date**: 2026-11-08
+- **Changes**:
+  - Replaced all legacy `DocRAG` / `docrag` instances across configuration, logging, worker queues, local storage keys, Docker configs, and tests:
+    - `PROJECT_NAME`: Updated to `docvyn` in `config.py`, `.env`, and `.env.example`.
+    - API root response now outputs: `{"message": "Welcome to docvyn API", "docs": "/api/v1/docs", "version": "1.0.0"}`.
+    - Worker: Renamed Celery app from `docrag_worker` to `docvyn_worker`.
+    - Logger: Renamed logger from `docrag` to `docvyn`.
+    - Frontend LocalStorage keys: Migrated `docrag_access_token`, `docrag_refresh_token`, `docrag_user` to `docvyn_*`.
+    - Frontend package name: Updated to `docvyn-frontend`.
+    - Docker: Updated container and database names to `docvyn`.
+    - PDF Documentation: Regenerated all technical documentation PDFs under the `docvyn` name.
+- **Verification**:
+  - 23/23 backend pytest tests passed.
+  - 25/25 Vitest frontend tests passed.
+  - Frontend production build (`npm run build`) succeeded without errors.
+  - Verified root endpoint `GET /` output.

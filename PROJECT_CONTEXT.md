@@ -39,7 +39,7 @@
 
 ## 3. Persistence & Data Models
 
-- **Database**: SQLite `test_docrag.db` in workspace root.
+- **Database**: SQLite `test_docvyn.db` in workspace root.
 - **Key Tables**:
   - `users`: User identity, hashed passwords, auth provider, role, timestamps.
   - `refresh_tokens`: Revocable refresh token storage.

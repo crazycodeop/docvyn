@@ -28,7 +28,7 @@ async def test_rag_query_with_citations(client: AsyncClient, db_session: AsyncSe
     await db_session.commit()
 
     emb_svc = EmbeddingService()
-    test_text = "DocRAG uses Supabase PostgreSQL with pgvector for high-performance vector search."
+    test_text = "docvyn uses Supabase PostgreSQL with pgvector for high-performance vector search."
     emb = emb_svc.get_embedding(test_text)
 
     chunk = DocumentChunk(
@@ -47,7 +47,7 @@ async def test_rag_query_with_citations(client: AsyncClient, db_session: AsyncSe
     resp = await client.post(
         "/api/v1/chat/query",
         json={
-            "question": "What database does DocRAG use for vector search?",
+            "question": "What database does docvyn use for vector search?",
             "top_k": 3,
             "similarity_threshold": 0.1,
         },
